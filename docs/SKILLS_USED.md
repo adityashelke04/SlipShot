@@ -13,3 +13,9 @@ Installed matches were discovered from the runtime catalog and actual SKILL.md f
 | Firecrawl | Installed research skill used to guide public source retrieval; public web/page access and available tools supplied research evidence. No account creation or authentication bypass. |
 
 No requested named skill was silently substituted. No optional missing skill blocked implementation. Native proof was limited by the user's no-desktop-interaction constraint; normal SDK build was limited by the missing SDK. REA being connected does not establish that BridgeShot internals were reverse engineered.
+
+## 0.2 follow-up
+
+Reran UI UX Pro Max design/WPF searches, applied Taste brief inference and Impeccable Operate/craft-floor guidance to a structural redesign (not a theme-only change), and performed an independent drag-lifetime review using Ponytail review priorities. The generic web design-system search was again treated as suggestions rather than copied into WPF. Public 21st.dev component previews were inspected; source access/license limits are recorded in REFERENCE_REFRESH.md. No web component code/assets imported. Requested BridgeShot REA remained public evidence reconstruction because no authorized binary/runtime target was supplied.
+
+Read the Orca CLI skill while diagnosing Publish Branch; ordinary Git/GitHub CLI evidence was sufficient to find missing origin/upstream, so no Orca UI/config changes were needed. User subsequently explicitly authorized a private GitHub repository and pushes. Authentication already worked; source is now pushed privately.

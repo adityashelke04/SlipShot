@@ -14,6 +14,10 @@ Synthetic visual review renders the actual detached editor content at 1240×820,
 
 ## Desktop checks — all NOT RUN
 
+0.2 update adds18 synthetic tests (80 total): gesture threshold/cancellation/timeout, PNG file/bitmap/stream payloads, redaction and source-metadata stripping, accepted late reads, canceled cleanup, ownership/expiry/capacity/write failures and physical-pixel DPI zoom. Offscreen layout review now includes16 fixtures with Text/Rectangle/Redaction contexts at640DIP. Source/fixture tests do not prove OLE interoperability.
+
+New manual checks: drag the thumbnail into Explorer, Paint/an image-aware composer and the user's terminal/IDE; verify attachment vs path semantics, Escape cancellation, >8second drag hold, no accidental editor opening, unsupported target, elevated target rejection and display-change/tray action during drag. **NOT RUN** on those real targets. Preview1 process launch was observed after the user asked to launch; this does not establish capture or preview2 launch correctness.
+
 | Check | Method and expected result | Status |
 |---|---|---|
 | First run/tray | Launch; tray appears; no editor/overlay; exit removes icon and hotkey | NOT RUN |

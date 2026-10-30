@@ -1,4 +1,4 @@
-param([string]$Version='0.1.0-preview.1')
+param([string]$Version='0.2.0-preview.1')
 $ErrorActionPreference='Stop'
 . "$PSScriptRoot/environment.ps1"
 if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$') { throw 'Use a simple semantic version.' }
@@ -12,7 +12,10 @@ New-Item -ItemType Directory -Path $destination -Force | Out-Null
 foreach($name in 'LeftShot.exe','LeftShot.dll','LeftShot.runtimeconfig.json') {Copy-Item -LiteralPath (Join-Path $source $name) -Destination $destination}
 foreach($name in 'README.md','TESTING.md','LICENSE','DEPENDENCIES.md','CHANGELOG.md','ARCHITECTURE.md','REFERENCE_NOTES.md') {Copy-Item -LiteralPath (Join-Path $repo $name) -Destination $destination}
 Copy-Item -LiteralPath (Join-Path $repo '.cache/tooling/microsoft.netcore.app.host.win-x64.8.0.11/LICENSE.TXT') -Destination (Join-Path $destination 'DOTNET-LICENSE.txt')
-$hashes=Get-ChildItem -LiteralPath $destination -File | Sort-Object Name | ForEach-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_.Name }
+$releaseDocs=Join-Path $destination 'docs'
+New-Item -ItemType Directory -Path $releaseDocs | Out-Null
+foreach($name in 'PUBLISHING.md','DRAG_REVIEW.md','REFERENCE_REFRESH.md','EDITOR_REDESIGN.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/$name") -Destination $releaseDocs}
+$hashes=Get-ChildItem -LiteralPath $destination -File -Recurse | Sort-Object FullName | ForEach-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_.FullName.Substring($destination.Length+1).Replace('\','/') }
 [IO.File]::WriteAllLines((Join-Path $destination 'SHA256SUMS.txt'),$hashes)
 $archive=Join-Path $release "LeftShot-$Version-win-x64.zip"
 Compress-Archive -Path "$destination/*" -DestinationPath $archive -CompressionLevel Optimal
