@@ -4,6 +4,21 @@ A small, local-only Windows screenshot editor. Capture a region, open the bottom
 
 **0.2.1-preview.1 — redesigned, with preview drag-and-drop; native target compatibility is pending.** Synthetic tests do not establish production readiness. LeftShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
 
+## App preview
+
+The real WPF interface, rendered with generated demo content only. **No personal screenshots or desktop content are used.** [How these images were made](docs/images/README.md).
+
+![LeftShot dark editor with synthetic sample annotations](docs/images/editor-dark.png)
+
+<details>
+<summary>Light appearance</summary>
+
+![LeftShot light editor with synthetic sample annotations](docs/images/editor-light.png)
+
+</details>
+
+![LeftShot capture preview with synthetic content and drag actions](docs/images/preview-dark.png)
+
 ## Run the portable preview
 
 Windows 10 version 2004 or newer / Windows 11, **x64**, with the **.NET 8 Windows Desktop Runtime**. Keep all files in the portable folder together and run `LeftShot.exe`. It starts in the notification area, without an editor or capture overlay appearing automatically. Default capture shortcut: **Ctrl+Alt+S**. The tray also provides capture, recent-image access, settings and exit. Windows may hide the tray icon in its overflow menu.

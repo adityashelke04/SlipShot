@@ -1,5 +1,9 @@
 # Progress
 
+## Repository handoff
+
+Added3reviewed synthetic actual-WPF UI images to docs/images and README, with reproducible generator/provenance. No desktop or personal screenshots used. Tightened ignore rules for private runtime data, credentials, binaries and images; only3exact demoPNG paths allowed. Added bounded tracked/history privacy checker and docs/REPOSITORY_PRIVACY.md. Source compiled during freshoffscreen rendering; app behavior unchanged, preceding87tests passed. Future release packages include the same reviewed demo images so README links work offline. No old release archive altered. Repository remains PRIVATE; staged-file/privacy checks and push complete as recorded in final handoff.
+
 ## Latest shortcut update: 0.2.1-preview.1
 
 User rejected function keys. Default is now Ctrl+Alt+S; modified letters supported in parser/settings UI alongside legacy function keys. Parser rejects numeric aliases, unmodified letters and reserved unsupported bindings. Observed test-first failure of four letter cases, then full suite87passed/0failed, native PE/static scan passed. New immutable local release artifacts/releases/0.2.1-preview.1/win-x64/LeftShot.exe; use this for the next launch. No app was running during this change, and actual native registration remains untested until launch. Earlier releases remain unchanged; preview0.2.0 local settings still contain the prior Ctrl+F8 preference. Current source/default and new release use Ctrl+Alt+S. No automatic startup or launch performed.

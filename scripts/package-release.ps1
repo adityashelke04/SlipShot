@@ -15,6 +15,9 @@ Copy-Item -LiteralPath (Join-Path $repo '.cache/tooling/microsoft.netcore.app.ho
 $releaseDocs=Join-Path $destination 'docs'
 New-Item -ItemType Directory -Path $releaseDocs | Out-Null
 foreach($name in 'PUBLISHING.md','DRAG_REVIEW.md','REFERENCE_REFRESH.md','EDITOR_REDESIGN.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/$name") -Destination $releaseDocs}
+$imageDocs=Join-Path $releaseDocs 'images'
+New-Item -ItemType Directory -Path $imageDocs | Out-Null
+foreach($name in 'editor-dark.png','editor-light.png','preview-dark.png','README.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/images/$name") -Destination $imageDocs}
 $hashes=Get-ChildItem -LiteralPath $destination -File -Recurse | Sort-Object FullName | ForEach-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_.FullName.Substring($destination.Length+1).Replace('\','/') }
 [IO.File]::WriteAllLines((Join-Path $destination 'SHA256SUMS.txt'),$hashes)
 $archive=Join-Path $release "LeftShot-$Version-win-x64.zip"

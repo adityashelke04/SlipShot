@@ -13,3 +13,22 @@ TestResults/
 *.jpg
 *.jpeg
 *.pdb
+*.exe
+*.dll
+*.zip
+**/data/
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+*.bmp
+*.gif
+*.webp
+*.tif
+*.tiff
+# Only reviewed, generated UI examples may be published as images.
+!docs/images/editor-dark.png
+!docs/images/editor-light.png
+!docs/images/preview-dark.png
