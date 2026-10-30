@@ -8,6 +8,7 @@ public static class GeometryUtil
 {
     public static Rect Normalize(Point a, Point b, Rect bounds)
     {
+        if (!Finite(a) || !Finite(b) || bounds.IsEmpty) return Rect.Empty;
         var rectangle = new Rect(a, b);
         rectangle.Intersect(bounds);
         return rectangle;
@@ -16,13 +17,17 @@ public static class GeometryUtil
     public static Point ToPixels(Point local, double scale, Point physicalOrigin)
     {
         ValidateScale(scale);
-        return new Point(physicalOrigin.X + local.X * scale, physicalOrigin.Y + local.Y * scale);
+        Point result = new(physicalOrigin.X + local.X * scale, physicalOrigin.Y + local.Y * scale);
+        if (!Finite(local) || !Finite(physicalOrigin) || !Finite(result)) throw new ArgumentException("Coordinates must be finite.");
+        return result;
     }
 
     public static Point ToDips(Point physical, double scale, Point physicalOrigin)
     {
         ValidateScale(scale);
-        return new Point((physical.X - physicalOrigin.X) / scale, (physical.Y - physicalOrigin.Y) / scale);
+        Point result = new((physical.X - physicalOrigin.X) / scale, (physical.Y - physicalOrigin.Y) / scale);
+        if (!Finite(physical) || !Finite(physicalOrigin) || !Finite(result)) throw new ArgumentException("Coordinates must be finite.");
+        return result;
     }
 
     private static void ValidateScale(double scale)
@@ -32,13 +37,15 @@ public static class GeometryUtil
 
     public static Rect PixelBounds(Rect rectangle, Rect limits)
     {
-        if (rectangle.IsEmpty || !double.IsFinite(rectangle.X) || !double.IsFinite(rectangle.Y)
+        if (rectangle.IsEmpty || rectangle.Width <= 0 || rectangle.Height <= 0 || !double.IsFinite(rectangle.X) || !double.IsFinite(rectangle.Y)
             || !double.IsFinite(rectangle.Width) || !double.IsFinite(rectangle.Height)) return Rect.Empty;
         var result = new Rect(new Point(Math.Floor(rectangle.Left), Math.Floor(rectangle.Top)),
             new Point(Math.Ceiling(rectangle.Right), Math.Ceiling(rectangle.Bottom)));
         result.Intersect(limits);
         return result;
     }
+
+    private static bool Finite(Point point) => double.IsFinite(point.X) && double.IsFinite(point.Y);
 
     public static bool HitTest(Annotation annotation, Point point, double tolerance)
     {

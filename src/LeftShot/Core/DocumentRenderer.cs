@@ -114,7 +114,9 @@ public static class DocumentRenderer
                 Point center = new(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
                 double radius = Math.Max(10, Math.Min(bounds.Width, bounds.Height) / 2);
                 drawing.DrawEllipse(brush, null, center, radius, radius);
-                FormattedText text = Text(annotation.Number.ToString(CultureInfo.InvariantCulture), Math.Max(10, radius * 1.15), Brushes.White);
+                Color color = annotation.Color;
+                Brush ink = color.R * 0.2126 + color.G * 0.7152 + color.B * 0.0722 > 140 ? Brushes.Black : Brushes.White;
+                FormattedText text = Text(annotation.Number.ToString(CultureInfo.InvariantCulture), Math.Max(10, radius * 1.15), ink);
                 drawing.DrawText(text, new Point(center.X - text.Width / 2, center.Y - text.Height / 2));
                 break;
             }

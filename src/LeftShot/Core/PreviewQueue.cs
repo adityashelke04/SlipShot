@@ -8,6 +8,14 @@ public sealed class PreviewQueue<T> where T : class
     private readonly Queue<T> pending = new();
     public T? Current { get; private set; }
     public int PendingCount => pending.Count;
+    public IEnumerable<T> Items
+    {
+        get
+        {
+            if (Current is not null) yield return Current;
+            foreach (T item in pending) yield return item;
+        }
+    }
 
     public void Push(T item)
     {

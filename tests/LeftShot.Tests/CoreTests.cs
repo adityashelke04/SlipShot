@@ -41,6 +41,8 @@ public sealed class CoreTests
         Assert.That(GeometryUtil.ToDips(new Point(120, 60), 2, new Point(0, 0)), Is.EqualTo(new Point(60, 30)));
         Assert.That(GeometryUtil.Normalize(new Point(70, 60), new Point(-5, 5), new Rect(0, 0, 100, 80)), Is.EqualTo(new Rect(0, 5, 70, 55)));
         Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtil.ToPixels(new Point(), 0, origin));
+        Assert.Throws<ArgumentException>(() => GeometryUtil.ToPixels(new Point(double.NaN, 5), 1, origin));
+        Assert.That(GeometryUtil.Normalize(new Point(double.NaN, 5), new Point(10, 10), new Rect(0, 0, 100, 80)), Is.EqualTo(Rect.Empty));
     }
 
     [Test]
@@ -166,6 +168,7 @@ public sealed class CoreTests
         doc.Commit(new DocumentState(new Rect(-20, -20, 200, 200), Array.Empty<Annotation>()));
         Assert.That(doc.State.Crop, Is.EqualTo(new Rect(0, 0, 100, 80)));
         Assert.Throws<ArgumentException>(() => doc.Commit(new DocumentState(new Rect(200, 200, 20, 20), Array.Empty<Annotation>())));
+        Assert.Throws<ArgumentException>(() => doc.Commit(new DocumentState(new Rect(10.2, 10.2, 0, 0), Array.Empty<Annotation>())));
         Assert.That(doc.State.Crop, Is.EqualTo(new Rect(0, 0, 100, 80)));
     }
 
@@ -176,6 +179,7 @@ public sealed class CoreTests
         foreach (string item in new[] { "one", "two", "three", "four", "five" }) queue.Push(item);
         Assert.That(queue.Current, Is.EqualTo("one"));
         Assert.That(queue.PendingCount, Is.EqualTo(3));
+        Assert.That(queue.Items, Is.EqualTo(new[] { "one", "three", "four", "five" }));
         queue.Dismiss();
         Assert.That(queue.Current, Is.EqualTo("three"));
         queue.Dismiss(); queue.Dismiss(); queue.Dismiss();
@@ -183,5 +187,126 @@ public sealed class CoreTests
         queue.Push("six"); queue.Push("seven"); queue.Clear();
         Assert.That(queue.Current, Is.Null);
         Assert.That(queue.PendingCount, Is.Zero);
+        Assert.That(queue.Items, Is.Empty);
+    }
+
+    [Test]
+    public void InvalidAnnotationsAndMemoryBudgetsLeaveDocumentUntouched()
+    {
+        var doc = new EditDocument(Image());
+        DocumentState before = doc.State;
+        foreach (Annotation invalid in new[]
+        {
+            Shape(ToolKind.Line) with { StrokeWidth = double.NaN },
+            Shape(ToolKind.Text) with { FontSize = double.PositiveInfinity },
+            Shape(ToolKind.Pen) with { Points = new[] { new Point(double.NaN, 5) } },
+            Shape(ToolKind.Rectangle) with { Bounds = new Rect(double.PositiveInfinity, 0, 5, 5) },
+            Shape(ToolKind.Text) with { Text = new string('a', 100001) },
+            Shape(ToolKind.Pen) with { Points = new Point[100001] }
+        })
+            Assert.Throws<ArgumentException>(() => doc.Commit(new DocumentState(before.Crop, new[] { invalid })));
+        Assert.Throws<ArgumentException>(() => doc.Commit(new DocumentState(before.Crop, Enumerable.Repeat(Shape(ToolKind.Step), 1001).ToArray())));
+        Assert.That(doc.State, Is.SameAs(before));
+        Assert.That(doc.CanUndo, Is.False);
+    }
+
+    [Test]
+    public void LargeHistoriesAreBoundedByPointMemoryAsWellAsStateCount()
+    {
+        var doc = new EditDocument(Image());
+        var annotation = Shape(ToolKind.Pen) with { Points = new Point[100000] };
+        for (int i = 0; i < 12; i++) doc.Commit(new DocumentState(doc.State.Crop, new[] { annotation }));
+        int retained = 1;
+        while (doc.CanUndo) { retained++; doc.Undo(); }
+        Assert.That(retained, Is.LessThanOrEqualTo(5));
+    }
+
+    [Test]
+    public void CaptureGateRejectsReentryAndCanceledOrStaleDelivery()
+    {
+        var gate = new CaptureGate();
+        Assert.That(gate.TryBegin(out long first), Is.True);
+        Assert.That(gate.IsCurrent(first), Is.True);
+        Assert.That(gate.TryBegin(out _), Is.False);
+        gate.Cancel();
+        Assert.That(gate.IsCurrent(first), Is.False);
+        Assert.That(gate.TryBegin(out _), Is.False);
+        Assert.That(gate.TryComplete(first), Is.False);
+        Assert.That(gate.TryBegin(out long second), Is.True);
+        Assert.That(gate.IsCurrent(first), Is.False);
+        Assert.That(gate.IsCurrent(second), Is.True);
+        Assert.That(gate.TryComplete(first), Is.False);
+        Assert.That(gate.TryBegin(out _), Is.False);
+        Assert.That(gate.TryComplete(second), Is.True);
+        Assert.That(gate.IsCurrent(second), Is.False);
+        Assert.That(gate.TryComplete(second), Is.False);
+        Assert.That(gate.TryBegin(out _), Is.True);
+    }
+
+    [Test]
+    public void PreviewTimePausesWithoutResetAndReducedMotionClosesImmediately()
+    {
+        var lifetime = new PreviewLifetime(TimeSpan.FromSeconds(8));
+        Assert.That(lifetime.Advance(TimeSpan.FromSeconds(3), false), Is.False);
+        Assert.That(lifetime.Advance(TimeSpan.FromHours(1), true), Is.False);
+        Assert.That(lifetime.Remaining, Is.EqualTo(TimeSpan.FromSeconds(5)));
+        Assert.That(lifetime.Advance(TimeSpan.FromSeconds(5), false), Is.True);
+        Assert.That(lifetime.Remaining, Is.EqualTo(TimeSpan.Zero));
+        Assert.That(lifetime.BeginDismiss(false), Is.EqualTo(TimeSpan.Zero));
+        Assert.That(lifetime.IsDismissing, Is.True);
+        Assert.That(lifetime.BeginDismiss(true), Is.EqualTo(TimeSpan.Zero));
+        var animated = new PreviewLifetime(TimeSpan.FromSeconds(8));
+        Assert.That(animated.BeginDismiss(true), Is.EqualTo(TimeSpan.FromMilliseconds(120)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => animated.Advance(TimeSpan.FromSeconds(-1), false));
+    }
+
+    [TestCase(ToolKind.Rectangle, 20, 20, 255, 0, 0)]
+    [TestCase(ToolKind.Ellipse, 35, 30, 255, 0, 0)]
+    [TestCase(ToolKind.Pen, 35, 30, 255, 0, 0)]
+    [TestCase(ToolKind.Arrow, 50, 15, 255, 0, 0)]
+    [TestCase(ToolKind.Step, 22, 30, 255, 0, 0)]
+    [TestCase(ToolKind.Redaction, 20, 20, 0, 0, 0)]
+    public void DrawingToolsPaintTheirExpectedInterior(ToolKind kind, int x, int y, byte r, byte g, byte b)
+    {
+        var doc = new EditDocument(Image());
+        doc.Commit(new DocumentState(doc.State.Crop, new[] { Shape(kind) }));
+        Assert.That(Pixel(DocumentRenderer.Render(doc), x, y), Is.EqualTo(Color.FromRgb(r, g, b)));
+    }
+
+    [Test]
+    public void TextPaintsGlyphsNearItsAnchorAndResizedRedactionRemainsOpaque()
+    {
+        var doc = new EditDocument(Image());
+        doc.Commit(new DocumentState(doc.State.Crop, new[] { Shape(ToolKind.Text) }));
+        BitmapSource text = DocumentRenderer.Render(doc);
+        int redPixels = 0;
+        for (int y = 10; y < 45; y++) for (int x = 10; x < 40; x++)
+        {
+            Color pixel = Pixel(text, x, y);
+            if (pixel.R > 240 && pixel.G < 100 && pixel.B < 100) redPixels++;
+        }
+        Assert.That(redPixels, Is.GreaterThan(20));
+        Annotation resized = GeometryUtil.Resize(Shape(ToolKind.Redaction), new Rect(20.2, 30.2, 5.1, 4.1));
+        doc.Commit(new DocumentState(doc.State.Crop, new[] { resized }));
+        BitmapSource redaction = DocumentRenderer.Render(doc);
+        Assert.That(Pixel(redaction, 20, 30), Is.EqualTo(Colors.Black));
+        Assert.That(Pixel(redaction, 25, 34), Is.EqualTo(Colors.Black));
+        Assert.That(Pixel(redaction, 19, 30), Is.EqualTo(Colors.White));
+    }
+
+    [TestCase(255, 255, 255)]
+    [TestCase(255, 255, 0)]
+    public void StepNumberRemainsReadableOnLightFill(byte r, byte g, byte b)
+    {
+        var doc = new EditDocument(Image());
+        doc.Commit(new DocumentState(doc.State.Crop, new[] { Shape(ToolKind.Step) with { Color = Color.FromRgb(r, g, b) } }));
+        BitmapSource rendered = DocumentRenderer.Render(doc);
+        int darkPixels = 0;
+        for (int y = 15; y < 45; y++) for (int x = 25; x < 45; x++)
+        {
+            Color pixel = Pixel(rendered, x, y);
+            if (pixel.R < 60 && pixel.G < 60 && pixel.B < 60) darkPixels++;
+        }
+        Assert.That(darkPixels, Is.GreaterThan(10));
     }
 }
