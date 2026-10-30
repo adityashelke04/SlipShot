@@ -22,7 +22,8 @@ for name, version in packages:
     digest = hashlib.sha256(data).hexdigest()
     if digest != hashes[name]:
         raise ValueError(f'Package checksum mismatch: {name} {version}')
-    archive.write_bytes(data)
+    if not archive.exists():
+        archive.write_bytes(data)
     marker = directory / '.verified'
     if marker.exists() and marker.read_text() == digest:
         print(f'Verified cached package: {directory.name}')

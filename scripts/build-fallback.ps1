@@ -6,8 +6,8 @@ $tooling = Join-Path $repo '.cache/tooling'
 $compiler = Join-Path $tooling 'microsoft.net.compilers.toolset.4.11.0/tasks/netcore/bincore/csc.dll'
 if (!(Test-Path $compiler)) { throw 'Run python scripts/bootstrap-compiler.py first. This downloads small official development packages into .cache/tooling.' }
 $dotnetRoot = Split-Path (Get-Command dotnet).Source -Parent
-$runtime = Get-ChildItem "$dotnetRoot/shared/Microsoft.NETCore.App/8.*" -Directory | Sort-Object Name -Descending | Select-Object -First 1
-$desktop = Get-ChildItem "$dotnetRoot/shared/Microsoft.WindowsDesktop.App/8.*" -Directory | Sort-Object Name -Descending | Select-Object -First 1
+$runtime = Get-ChildItem "$dotnetRoot/shared/Microsoft.NETCore.App/8.*" -Directory | Where-Object { $_.Name -match '^8\.\d+\.\d+$' } | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
+$desktop = Get-ChildItem "$dotnetRoot/shared/Microsoft.WindowsDesktop.App/8.*" -Directory | Where-Object { $_.Name -match '^8\.\d+\.\d+$' } | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
 if (!$runtime -or !$desktop) { throw '.NET 8 x64 Windows Desktop Runtime is required.' }
 $out = Join-Path $repo 'artifacts/portable'
 New-Item -ItemType Directory -Force $out | Out-Null
