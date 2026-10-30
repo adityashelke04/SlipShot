@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <StartupObject>LeftShot.Program</StartupObject>
+    <AssemblyName>LeftShot</AssemblyName>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>
