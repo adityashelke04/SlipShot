@@ -40,7 +40,7 @@ internal sealed class AppController : IDisposable
     private bool disposed;
     private bool suppressAdvance;
     private bool exitRequested;
-    private bool copying;
+    private CancellationTokenSource? copyRequest;
     private bool saving;
     internal AppController(Application app) => this.app=app;
 
@@ -87,7 +87,7 @@ internal sealed class AppController : IDisposable
             BitmapSource frame=await pending.WaitAsync(TimeSpan.FromSeconds(3),cancel.Token);
             if(disposed||!captureGate.IsCurrent(generation))return;
             overlay=new SelectionWindow(frame,monitor);
-            var selected=new TaskCompletionSource<Int32Rect?>();
+            var selected=new TaskCompletionSource<Int32Rect?>(TaskCreationOptions.RunContinuationsAsynchronously);
             overlay.Closed+=(_,_)=>selected.TrySetResult(overlay?.Selection);
             overlay.Show();
             Int32Rect? rect=await selected.Task;
@@ -98,8 +98,9 @@ internal sealed class AppController : IDisposable
             int stride=checked(rect.Value.Width*4);var pixels=new byte[checked(stride*rect.Value.Height)];
             crop.CopyPixels(pixels,stride,0);
             var image=BitmapSource.Create(rect.Value.Width,rect.Value.Height,96,96,PixelFormats.Bgra32,null,pixels,stride);image.Freeze();
-            var captured=new Captured(image,monitor);latest=captured;queue.Push(captured);
-            if(settings.AutoCopy) await CopyAsync(new EditDocument(image));
+            var captured=new Captured(image,monitor);latest=captured;
+            RetirePreview();queue.Replace(captured);
+            if(settings.AutoCopy) await PreviewCopyAsync(image);
         }
         catch(TimeoutException) {cancel.Cancel();captureGate.Cancel();Notify("Capture timed out. Try again after the display is responsive, or use borderless/windowed mode.");}
         catch(OperationCanceledException) { }
@@ -112,32 +113,34 @@ internal sealed class AppController : IDisposable
                 if(disposed||!app.Windows.Cast<Window>().Contains(window))continue;
                 window.ShowActivated=false;window.Show();
             }
-            if(!disposed) ShowPreview();
             // A timed-out native call cannot be killed safely. Keep the capture gate occupied until it returns.
             if(pending is not null&&!pending.IsCompleted)
             {
-                _=pending.ContinueWith(task=> { _=task.Exception; Dispatch(()=>captureGate.TryComplete(generation)); },TaskScheduler.Default);
+                _=pending.ContinueWith(task=> { _=task.Exception; Dispatch(()=> {captureGate.TryComplete(generation);ShowPreview();}); },TaskScheduler.Default);
             }
-            else captureGate.TryComplete(generation);
+            else {captureGate.TryComplete(generation);if(!disposed)ShowPreview();}
         }
     }
 
     private void ShowPreview()
     {
-        if(disposed||exitRequested||preview is not null||queue.Current is not Captured shot)return;
-        preview=new PreviewWindow(shot.Image,shot.Monitor,settings.PreviewSeconds,
-            ()=>OpenEditor(shot),()=>_ = PreviewCopyAsync(shot.Image),
+        if(disposed||exitRequested||captureGate.IsBusy||preview is not null||queue.Current is not Captured shot)return;
+        var card=new PreviewWindow(shot.Image,shot.Monitor,settings.PreviewSeconds,
+            ()=>OpenEditor(shot),()=>CopyAsync(new EditDocument(shot.Image)),
             ()=>_ = SaveAsync(new EditDocument(shot.Image)),()=> {try {Pin(shot.Image);}catch(InvalidOperationException ex){Notify(ex.Message);} },DragImage);
-        preview.Closed+=(_,_)=> {preview=null;if(!suppressAdvance) {queue.Dismiss();ShowPreview();}};
-        preview.Show();
+        preview=card;
+        card.Closed+=(_,_)=> {if(!ReferenceEquals(preview,card))return;preview=null;if(!suppressAdvance)queue.Clear();};
+        card.Show();
     }
+    private void RetirePreview()
+    {var retired=preview;preview=null;retired?.Close();}
     private void ReopenPreview()
     {
-        if(preview?.IsDragging==true)return;
+        if(captureGate.IsBusy||preview?.IsDragging==true)return;
         if(latest is null){Notify("No capture retained. Choose Capture region to begin.");return;}
         try {latest=latest with {Monitor=Native.RefreshMonitor(latest.Monitor)};}
         catch(Exception ex) when(IsExpected(ex)){Notify("No display is available for the preview. The image remains available through Edit latest capture.");return;}
-        suppressAdvance=true;preview?.Close();suppressAdvance=false;queue.Clear();queue.Push(latest);ShowPreview();
+        RetirePreview();queue.Replace(latest);ShowPreview();
     }
     private void Forget()
     {if(preview?.IsDragging==true)return;suppressAdvance=true;preview?.Close();suppressAdvance=false;queue.Clear();latest=null;Notify("Preview memory released. Open editors and pinned references remain available.");}
@@ -168,13 +171,15 @@ internal sealed class AppController : IDisposable
     }
     private async Task CopyAsync(EditDocument document)
     {
-        if(!ResourcePolicy.CanAllocate(RetainedBytes(),(long)document.State.Crop.Width*(long)document.State.Crop.Height))throw new InvalidOperationException("Close another editor or reference to free image memory before copying.");
-        if(copying)throw new InvalidOperationException("Another copy is still in progress. Try again shortly.");copying=true;
-        try {await ClipboardWriter.CopyAsync(DocumentRenderer.Render(document),new WindowsClipboardSink(),lifetime.Token);Notify("Image copied.");}
-        finally {copying=false;}
+        if(!ResourcePolicy.CanAllocate(RetainedBytes(),(long)document.State.Crop.Width*(long)document.State.Crop.Height,5))throw new InvalidOperationException("There is not enough image memory to copy this capture. Close another editor/reference or save it instead.");
+        copyRequest?.Cancel();
+        using var request=CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        copyRequest=request;
+        try {await ClipboardWriter.CopyAsync(DocumentRenderer.Render(document),new WindowsClipboardSink(),request.Token);Notify("Image copied.");}
+        finally {if(ReferenceEquals(copyRequest,request))copyRequest=null;}
     }
     private async Task PreviewCopyAsync(BitmapSource image)
-    {try {await CopyAsync(new EditDocument(image));}catch(Exception ex) when(IsExpected(ex)||ex is OperationCanceledException){Notify("Could not copy. The clipboard may be busy; try again.");}}
+    {try {await CopyAsync(new EditDocument(image));}catch(OperationCanceledException){}catch(Exception ex) when(IsExpected(ex)){Notify("Capture is ready, but automatic copy failed. Use Copy on the preview to retry.");}}
     private Task<bool> SaveAsync(EditDocument document)
     {
         if(saving)return Task.FromResult(false);saving=true;

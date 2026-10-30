@@ -16,4 +16,6 @@ public sealed class PreviewGesture
     }
     public bool Release() {bool click=Holding&&!Dragging;Holding=false;Dragging=false;return click;}
     public void Cancel() {Holding=false;Dragging=false;}
+    public bool CancelReleasedHold(bool buttonDown)
+    {if(!Holding||Dragging||buttonDown)return false;Cancel();return true;}
 }

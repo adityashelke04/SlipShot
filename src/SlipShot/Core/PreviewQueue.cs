@@ -8,6 +8,8 @@ public sealed class PreviewQueue<T> where T : class
     private readonly Queue<T> pending = new();
     public T? Current { get; private set; }
     public int PendingCount => pending.Count;
+    public void Replace(T item)
+    {ArgumentNullException.ThrowIfNull(item);pending.Clear();Current=item;}
     public IEnumerable<T> Items
     {
         get

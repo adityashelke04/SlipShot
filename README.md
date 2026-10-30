@@ -4,7 +4,7 @@ Previously developed under the working name LeftShot. Historical audit records a
 
 A small, local-only Windows screenshot editor. Capture a region, open the bottom-left preview, annotate, and copy or save a flattened image.
 
-**0.2.2-preview.1 — redesigned, with preview drag-and-drop; native target compatibility is pending.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
+**0.2.3-preview.1 — bounded preview lifetime and newest-capture handoff.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
 
 ## App preview
 
@@ -25,7 +25,7 @@ The real WPF interface, rendered with generated demo content only. **No personal
 
 Windows 10 version 2004 or newer / Windows 11, **x64**, with the **.NET 8 Windows Desktop Runtime**. Keep all files in the portable folder together and run `SlipShot.exe`. It starts in the notification area, without an editor or capture overlay appearing automatically. Default capture shortcut: **Ctrl+Alt+S**. The tray also provides capture, recent-image access, settings and exit. Windows may hide the tray icon in its overflow menu.
 
-Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.2-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
+Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.3-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
 
 All preferences live in `data/settings.json` beside the executable. Put the portable folder in a location you can write. There is no screenshot history or automatic saving. Choosing Save opens a dialog; deliberately dragging creates a temporary flattened PNG in `data/drag-out` beside the app. No cloud location is selected automatically. An explicitly chosen folder is the user's responsibility.
 
@@ -33,7 +33,7 @@ All preferences live in `data/settings.json` beside the executable. Put the port
 
 1. Place the pointer on the desired monitor. Press Ctrl+Alt+S or choose **Capture region** from the tray.
 2. Drag in any direction within that monitor. Release to capture; Escape cancels. Cross-monitor selection is deliberately constrained. Keyboard alternative: Space sets the center anchor, arrows adjust the end point, Shift moves 10 pixels, Enter captures.
-3. The preview appears at the **bottom-left of that monitor's work area**. Click the image to edit, or hold and drag it into an app that accepts files/images. Edit, Copy, Save and Pin remain available. It expires after eight seconds, pausing while hovered, held or dragged, with a fresh timeout after a drag. Appearance does not activate the app. The tray gives keyboard access to the latest capture.
+3. The preview appears at the **bottom-left of that monitor's work area**. Click the image to edit, or hold and drag it into an app that accepts files/images. Edit, Copy, Save and Pin remain available. It auto-hides after10seconds by default. Hover adds at most20additional seconds; a parked pointer or stale focus cannot pin it forever. Genuine holds, drags and active copying pause it. Appearance does not activate the app. The tray gives keyboard access to the latest capture.
 4. In the editor, use Crop, Arrow, Line, Rectangle, Ellipse, Pen, Highlight, Text, numbered Step or opaque Redact. Select objects from the canvas or Annotations panel, move them, drag a resize handle, or delete them. Text controls support content, font size and opaque color; rectangles and ellipses support fill.
 5. Ctrl+Z undoes; Ctrl+Y / Ctrl+Shift+Z redoes. Ctrl+C copies the flattened image; Ctrl+S saves. These shortcuts yield to text/combo editing. Ctrl+wheel zooms; Fit fits without enlarging past100%; 100% maps one source pixel to one physical screen pixel. Middle-drag or Space+drag pans. Arrow keys nudge a selected object; Shift nudges 10 source pixels. Editing closes through Save / Discard / Cancel.
 
@@ -43,7 +43,9 @@ Accepted drag files survive app exit for late target reads. Owned files older th
 
 GitHub repository setup is now private with origin/master tracking. Use `./scripts/check-publish.ps1 -CheckRemote` then `git push`. See [publishing notes](docs/PUBLISHING.md); do not change visibility without an explicit decision.
 
-One preview is visible, with at most three pending. Overflow drops the oldest pending capture. The most recent capture remains available from the tray until replaced, forgotten or exit. Dismissal never deletes a saved file. Three editors and three pins are allowed, subject to the image-memory budget. Use **Forget in-memory previews** to release recent captures; it leaves editors and pins intact.
+Only the newest capture is shown: a successful second capture replaces the first card and its actions. Older cards do not resurface on timeout. Canceling capture retains the prior card if it has not already expired. The latest capture remains in the tray until replaced, forgotten or exit. Dismissal never deletes saved files. Three editors and three pins are allowed, subject to the image-memory budget. **Forget in-memory previews** leaves editors and pins intact.
+
+Capture alone does **not** change the clipboard unless you enable automatic copying in Settings. Press **Copy** and wait for **Copied · Ctrl+V to paste**, then paste into an image-aware destination. Copy publishes bitmap and PNG representations; an ordinary terminal may not accept image paste. New copy requests supersede pending older retries. Preview timing remains configurable from2to60seconds; passive grace is twice that setting. See [timeout and multi-capture review](docs/PREVIEW_REVIEW.md).
 
 ## Build and test with an SDK
 

@@ -1,5 +1,9 @@
 # Progress
 
+## Latest fix: 0.2.3-preview.1
+
+Investigated installed stuck preview using only window metadata (pointeroutside/notforeground); no personal image read. Confirmed FIFOcardA-versus-latestB mismatch and publicationduringcapture path. Fixed latest-only replacement with identity-guarded Closed, capture-active suppression, async selection completion; optional copy errors remain distinct from capture success. Default10second idle+20second aggregate hover grace; physical pointer/foreground check, missed-release recovery, and timer-driven close independent of fade. Genuine hold/drag/copy protected. Persistent clipboardBitmap+PNG added, old pending copy requests superseded. Suite102passed including realtimer/unshownWindow regression, no native clipboard/capture test. Packaged0.2.3; installed fixed payload at F:/Apps/SlipShot/versions/0.2.3-preview.1 and updated Start menu. Existing10448process deliberately untouched; normal Exit then Start activates fix. Settings preserved with PreviewSeconds10, no capture files copied. Userrequestedcommit+push aftertests.
+
 ## Latest: SlipShot 0.2.2-preview.1
 
 Renamed product, projects, namespaces, executable/apphost, generated filenames, current docs and safe synthetic README images to SlipShot. Source directories now src/SlipShot and tests/SlipShot.Tests; solution SlipShot.sln. Private GitHub repository renamed to adityashelke04/SlipShot, origin updated. Ctrl+Alt+S unchanged. Historical records/releases untouched; legacy mutex and .leftshot-drag prefix deliberately retained for compatibility. Serial build87tests passed,16offscreen UI fixtures regenerated; static host/source checks passed. New release path artifacts/releases/0.2.2-preview.1/win-x64/SlipShot.exe. No desktop capture or personal screenshot used; app launch not performed in this rename.

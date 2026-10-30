@@ -6,6 +6,7 @@ public sealed class CaptureGate
     private long generation;
     private bool active;
     private bool canceled;
+    public bool IsBusy => active;
 
     public bool TryBegin(out long token)
     {

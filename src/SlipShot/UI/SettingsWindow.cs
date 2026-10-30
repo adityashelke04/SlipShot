@@ -25,6 +25,7 @@ internal sealed class SettingsWindow : Window
         var appearanceLabel=Theme.Text("Appearance");appearanceLabel.Margin=new Thickness(0,16,0,0);body.Children.Add(appearanceLabel);
         var appearance=new ComboBox {ItemsSource=new[]{"System","Light","Dark"},SelectedItem=initial.Appearance,MinHeight=34,Margin=new Thickness(0,6,0,8)};AutomationProperties.SetName(appearance,"Appearance");body.Children.Add(appearance);
         var timeout=Field("Preview duration (2–60 seconds)",initial.PreviewSeconds.ToString());
+        body.Children.Add(Theme.Text("Default: 10 seconds. Hover adds up to twice this duration; dragging stays protected. Latest capture remains in the tray.",12,true));
         var motion=new CheckBox {Content="Reduce motion",IsChecked=initial.ReducedMotion};body.Children.Add(motion);
         var copy=new CheckBox {Content="Copy automatically after capture",IsChecked=initial.AutoCopy};body.Children.Add(copy);
         var folder=Field("Preferred save folder (optional)",initial.SaveDirectory??"");

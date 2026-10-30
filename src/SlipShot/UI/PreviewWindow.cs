@@ -2,11 +2,13 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -27,10 +29,11 @@ internal sealed class PreviewWindow : Window
     private PreviewLifetime lifetime;
     private bool dragging;
     private bool closeRequested;
+    private bool copying;
 
     internal bool IsDragging => dragging;
 
-    internal PreviewWindow(BitmapSource image, CaptureMonitor monitor, int seconds, Action edit, Action copy,
+    internal PreviewWindow(BitmapSource image, CaptureMonitor monitor, int seconds, Action edit, Func<Task> copy,
         Action save, Action pin, Action<DependencyObject, BitmapSource>? drag = null)
     {
         this.monitor = monitor;
@@ -106,15 +109,16 @@ internal sealed class PreviewWindow : Window
 
         var actions = new UniformGrid { Columns = 4 };
         AddAction("Edit", "M 2,11 L 1,15 L 5,14 L 14,5 L 10,1 Z M 8,3 L 12,7", edit, true);
-        AddAction("Copy", "M 5,5 L 14,5 L 14,15 L 5,15 Z M 2,11 L 1,11 L 1,1 L 10,1 L 10,2", copy);
+        Button? copyButton=null;
+        copyButton=AddAction("Copy", "M 5,5 L 14,5 L 14,15 L 5,15 Z M 2,11 L 1,11 L 1,1 L 10,1 L 10,2", ()=>_ = CopyImageAsync());
         AddAction("Save", "M 2,1 L 11,1 L 15,5 L 15,15 L 1,15 L 1,1 Z M 5,1 L 5,6 L 11,6 L 11,1 M 5,15 L 5,10 L 11,10 L 11,15", save);
         AddAction("Pin", "M 5,1 L 11,1 M 6,1 L 6,6 L 3,10 L 13,10 L 10,6 L 10,1 M 8,10 L 8,15", pin);
         var actionGroup = new Border { Child = actions, CornerRadius = new CornerRadius(9), Padding = new Thickness(2), Margin = new Thickness(0, 12, 0, 0) };
         actionGroup.SetResourceReference(Border.BackgroundProperty, "Canvas");
         stack.Children.Add(actionGroup);
-        TextBlock retention = Theme.Text("Drag creates a temporary PNG · Latest in tray", 11, true);
+        TextBlock retention = Theme.Text($"Auto-hide: {seconds}s · Latest in tray", 11, true);
         retention.Margin = new Thickness(0, 10, 0, 0);
-        retention.ToolTip = "Accepted drops keep a temporary PNG in data/drag-out beside SlipShot for at least 24 hours. Older files are cleaned on a later drag; cancelled drags are removed.";
+        retention.ToolTip = $"Auto-hides after {seconds} seconds, with up to {seconds*2} additional seconds of hover grace. Holding/dragging pauses it. Accepted drops keep a temporary PNG in data/drag-out for at least 24 hours; cleanup occurs on a later drag.";
         stack.Children.Add(retention);
 
         var card = new Border { Child = stack, CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1), RenderTransform = translation };
@@ -186,7 +190,7 @@ internal sealed class PreviewWindow : Window
         Loaded += (_, _) =>
         {
             Place();
-            if (Theme.MotionEnabled)
+            if (Theme.MotionEnabled && !lifetime.IsDismissing)
             {
                 translation.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(-24, 0, TimeSpan.FromMilliseconds(180)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
                 Theme.AnimateEntrance(this);
@@ -196,7 +200,15 @@ internal sealed class PreviewWindow : Window
         };
         Closed += (_, _) => { timer.Stop(); clock.Stop(); gesture.Cancel(); thumbnail.Source = null; };
 
-        void AddAction(string label, string path, Action action, bool primary = false)
+        async Task CopyImageAsync()
+        {
+            if(copying)return;copying=true;copyButton!.IsEnabled=false;hint.Text="Copying image…";
+            try {await copy();hint.Text="Copied · Ctrl+V to paste";}
+            catch(Exception error) {hint.Text="Copy failed · try again";hint.ToolTip=error.Message;}
+            finally {copying=false;copyButton.IsEnabled=true;lifetime=new PreviewLifetime(previewDuration);clock.Restart();}
+        }
+
+        Button AddAction(string label, string path, Action action, bool primary = false)
         {
             Button button = Theme.Button(label, action, primary);
             button.Margin = new Thickness(1, 0, 1, 0);
@@ -208,6 +220,7 @@ internal sealed class PreviewWindow : Window
             content.Children.Add(text);
             button.Content = content;
             actions.Children.Add(button);
+            return button;
         }
     }
 
@@ -221,19 +234,24 @@ internal sealed class PreviewWindow : Window
     {
         TimeSpan elapsed = clock.Elapsed;
         clock.Restart();
-        if (lifetime.Advance(elapsed, !IsVisible || IsMouseOver || IsKeyboardFocusWithin || gesture.Holding || dragging)) Dismiss();
+        // Close from the timer even if a fade is replaced, disabled or never receives Completed.
+        if (lifetime.IsDismissing) {if(lifetime.AdvanceDismissal(elapsed))Close();return;}
+        if (!dragging && gesture.CancelReleasedHold(Native.GetAsyncKeyState(1)<0) && IsMouseCaptureWithin && Mouse.Captured is UIElement captured)
+            captured.ReleaseMouseCapture();
+        IntPtr handle=new WindowInteropHelper(this).Handle;
+        bool passive=Native.PointerInside(handle) || (Native.GetForegroundWindow()==handle && IsKeyboardFocusWithin);
+        if (lifetime.Advance(elapsed,passive,!IsVisible || gesture.Holding || dragging || copying)) Dismiss();
     }
 
     internal void Dismiss()
     {
         if (dragging) { closeRequested = true; return; }
         if (lifetime.IsDismissing) return;
-        timer.Stop();
         gesture.Cancel();
         TimeSpan duration = lifetime.BeginDismiss(Theme.MotionEnabled);
         if (duration == TimeSpan.Zero) { Close(); return; }
+        clock.Restart();timer.Start();
         var fade = new DoubleAnimation(0, duration);
-        fade.Completed += (_, _) => Close();
         BeginAnimation(OpacityProperty, fade);
         translation.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(-16, TimeSpan.FromMilliseconds(120)));
     }

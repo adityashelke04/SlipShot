@@ -4,6 +4,8 @@ Automated runs use synthetic pixels, fake clipboard sinks, temporary files under
 
 ## Automated evidence
 
+0.2.3 regression pass:102tests passed. New tests cover10second idle/30second passive limit, aggregate hover allowance, active gestures, missed release recovery, fade-independent closure using a real dispatcher and an unshown zero-HWND preview, latest-capture replacement, capture-busy publication guard, and bitmap/PNG copy privacy and pixel identity. No real desktop or clipboard content used. Manually verify two rapid captures, Copy then app-switch, >30second parked hover, active long drag, cancelled capture and capture during fade. These real-input checks remain NOT RUN.
+
 Run `./scripts/build-fallback.ps1 -Test -VisualCheck` or the SDK commands in README. Machine: Windows x64, .NET desktop runtime 8.0.11. Warnings are errors in fallback compilation. Latest exact totals are in `docs/VERIFICATION.md` and `artifacts/tests/TestResult.xml`.
 
 Coverage includes 100/125/150/200% coordinate round trips with negative origins; normalized/tiny/empty/clipped selection; crop pixel dimensions independent of source DPI; drawing pixels for every tool; descending line direction; redaction layering/opacity and PNG reload; text and step contrast; all resize handles; undo/redo/invalidation/saved state; view-model notifications; geometry/input/memory validation; capture cancellation/reentry/stale completion; preview queue bounds/pause/reduced motion and placement; PNG/JPEG encoding/transparency; overwrite/collision/invalid path/write failure; corrupt/unsupported settings; busy/nonbusy/canceled clipboard with thread identity assertions.

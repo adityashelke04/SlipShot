@@ -12,4 +12,4 @@ Current palette: dark Surface #191C20, Panel #22262B, Canvas #101316, Border #36
 
 Editor entrance: 180ms opacity only. No capture/save/copy waits for animation. Interactions use explicit hit targets, accessible names, keyboard focus. Text editing suppresses document shortcuts. Every surfaced action must work; unfinished optional actions stay absent.
 
-Synthetic offscreen render review is allowed; actual windows, focus behavior, mixed-DPI native capture and accessibility remain NOT RUN until user returns.
+0.2.3 behavior supersedes earlier preview timing/queue descriptions:10second default; at most20additional seconds shared hover/focus grace; real held gestures, drag and copy pause expiry. Native pointer/foreground checks and timer-driven closure prevent passive states or lost animations pinning the window. A successful capture replaces the previous card, with latest image retained in tray and no older-card resurfacing. Copy shows in-card success/error feedback and publishes bitmap+PNG. Synthetic offscreen render review is allowed; native target interoperability remains NOT RUN unless explicitly observed.

@@ -248,7 +248,7 @@ public sealed class CoreTests
     {
         var lifetime = new PreviewLifetime(TimeSpan.FromSeconds(8));
         Assert.That(lifetime.Advance(TimeSpan.FromSeconds(3), false), Is.False);
-        Assert.That(lifetime.Advance(TimeSpan.FromHours(1), true), Is.False);
+        Assert.That(lifetime.Advance(TimeSpan.FromSeconds(3), true), Is.False);
         Assert.That(lifetime.Remaining, Is.EqualTo(TimeSpan.FromSeconds(5)));
         Assert.That(lifetime.Advance(TimeSpan.FromSeconds(5), false), Is.True);
         Assert.That(lifetime.Remaining, Is.EqualTo(TimeSpan.Zero));

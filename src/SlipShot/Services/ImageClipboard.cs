@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
@@ -19,7 +21,30 @@ public sealed class WindowsClipboardSink : IClipboardSink
     {
         if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
             throw new InvalidOperationException("Clipboard access requires the application's UI thread.");
-        Clipboard.SetImage(image);
+        Clipboard.SetDataObject(ClipboardPayload.Create(image), copy: true);
+    }
+}
+
+public static class ClipboardPayload
+{
+    public static DataObject Create(BitmapSource flattened)
+    {
+        ArgumentNullException.ThrowIfNull(flattened);
+        int stride = checked(flattened.PixelWidth * 4);
+        var pixels = new byte[checked(stride * flattened.PixelHeight)];
+        new FormatConvertedBitmap(flattened, PixelFormats.Bgra32, null, 0).CopyPixels(pixels, stride, 0);
+        // Detach only flattened pixels so neither format retains source metadata or a thumbnail.
+        BitmapSource bitmap = BitmapSource.Create(flattened.PixelWidth, flattened.PixelHeight,
+            96, 96, PixelFormats.Bgra32, null, pixels, stride);
+        bitmap.Freeze();
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var encoded = new MemoryStream();
+        encoder.Save(encoded);
+        var data = new DataObject();
+        data.SetImage(bitmap);
+        data.SetData("PNG", new MemoryStream(encoded.ToArray(), writable: false), autoConvert: false);
+        return data;
     }
 }
 

@@ -49,7 +49,7 @@ internal static class VisualCheck
             }
             var sample=SyntheticDocument();
             var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=1920,Bottom=1080},new Native.RectI {Right=1920,Bottom=1040},1);
-            var preview=new PreviewWindow(sample.Source,monitor,8,()=>{},()=>{},()=>{},()=>{});
+            var preview=new PreviewWindow(sample.Source,monitor,10,()=>{},()=>Task.CompletedTask,()=>{},()=>{});
             RenderContent(preview,new Size(328,360),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}.png"));
             var settings=new SettingsWindow(new AppSettings(),_=>null);
             RenderContent(settings,new Size(460,660),Path.Combine(output,$"settings-{appearance.ToLowerInvariant()}.png"));

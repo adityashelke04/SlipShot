@@ -10,7 +10,7 @@ public sealed record AppSettings
     public int Version { get; init; } = 1;
     public string Hotkey { get; init; } = "Ctrl+Alt+S";
     public string Appearance { get; init; } = "System";
-    public int PreviewSeconds { get; init; } = 8;
+    public int PreviewSeconds { get; init; } = 10;
     public bool ReducedMotion { get; init; }
     public bool AutoCopy { get; init; }
     public string? SaveDirectory { get; init; }

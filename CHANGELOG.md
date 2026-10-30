@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3-preview.1 — 2026-10-30
+
+- Default preview timeout10seconds; passive hover/focus grace capped at twice the configured duration. Real hold/drag/copy remains protected. Native pointer/foreground validation and missed-release recovery prevent stale WPF flags pinning the card indefinitely.
+- Timer-driven closure remains effective if the fade never completes. New capture replaces the old card; no FIFO resurfacing or preview publication during selection. Retired cards cannot clear newer ownership.
+- Copy provides persistent PNG and bitmap formats with metadata stripped, shows success/error feedback, and supersedes older pending copy retries. Optional auto-copy errors no longer misreport capture failure. Auto-copy remains opt-in.
+
 ## 0.2.2-preview.1 — 2026-10-30
 
 Renamed the application to **SlipShot**: UI/tray labels, generated image filenames, executable/assembly/project/namespace names, build scripts, current docs and synthetic demo images. Private GitHub repository renamed to adityashelke04/SlipShot. Shortcut remains Ctrl+Alt+S. Historical releases/audit records retain their original identity. Kept the legacy single-instance mutex and drag-file prefix to coexist safely with earlier builds and retained transfers.

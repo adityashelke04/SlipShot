@@ -9,5 +9,9 @@ public class PreviewGestureTests
     [Test] public void CancelNeverTurnsIntoClickOrDrag()
     {var gesture=new PreviewGesture();gesture.Press(new Point());gesture.Cancel();Assert.That(gesture.Release(),Is.False);Assert.That(gesture.Move(new Point(50,50),4,4),Is.False);}
     [Test] public void HoldingAndDraggingBothKeepPreviewAliveOutsideItsBounds()
-    {var g=new PreviewGesture();var timer=new PreviewLifetime(System.TimeSpan.FromSeconds(8));g.Press(new Point());timer.Advance(System.TimeSpan.FromSeconds(30),g.Holding||g.Dragging);Assert.That(timer.Remaining.TotalSeconds,Is.EqualTo(8));g.Move(new Point(-200,200),4,4);timer.Advance(System.TimeSpan.FromMinutes(1),g.Holding||g.Dragging);Assert.That(timer.Remaining.TotalSeconds,Is.EqualTo(8));g.Release();Assert.That(timer.Advance(System.TimeSpan.FromSeconds(8),false),Is.True);}
+    {var g=new PreviewGesture();var timer=new PreviewLifetime(System.TimeSpan.FromSeconds(8));g.Press(new Point());timer.Advance(System.TimeSpan.FromSeconds(30),false,g.Holding||g.Dragging);Assert.That(timer.Remaining.TotalSeconds,Is.EqualTo(8));g.Move(new Point(-200,200),4,4);timer.Advance(System.TimeSpan.FromMinutes(1),false,g.Holding||g.Dragging);Assert.That(timer.Remaining.TotalSeconds,Is.EqualTo(8));g.Release();Assert.That(timer.Advance(System.TimeSpan.FromSeconds(8),false),Is.True);}
+    [Test] public void MissedMouseReleaseCannotLeaveAHeldGestureStuck()
+    {var g=new PreviewGesture();g.Press(new Point());Assert.That(g.CancelReleasedHold(true),Is.False);Assert.That(g.CancelReleasedHold(false),Is.True);Assert.That(g.Holding,Is.False);Assert.That(g.Release(),Is.False);}
+    [Test] public void PhysicalReleaseDoesNotCancelTheActiveOleDropLoop()
+    {var g=new PreviewGesture();g.Press(new Point());g.Move(new Point(40,40),4,4);Assert.That(g.CancelReleasedHold(false),Is.False);Assert.That(g.Dragging,Is.True);}
 }

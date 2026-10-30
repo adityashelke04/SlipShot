@@ -27,6 +27,10 @@ internal static class Native
     [DllImport("user32.dll")] internal static extern bool UnregisterHotKey(IntPtr hwnd,int id);
     [DllImport("dwmapi.dll")] internal static extern int DwmFlush();
     [DllImport("user32.dll")] internal static extern bool IsWindowVisible(IntPtr hwnd);
+    [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] internal static extern short GetAsyncKeyState(int key);
+    [DllImport("user32.dll")] internal static extern bool GetWindowRect(IntPtr hwnd,out RectI rect);
+    internal static bool PointerInside(IntPtr hwnd) => GetCursorPos(out var p) && GetWindowRect(hwnd,out var r) && p.X>=r.Left && p.X<r.Right && p.Y>=r.Top && p.Y<r.Bottom;
 
     internal static CaptureMonitor MonitorAtPointer()
     {
