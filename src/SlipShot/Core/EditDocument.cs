@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -22,6 +23,19 @@ public sealed class EditDocument
     private long retainedCost;
     private int position;
     private readonly WeakReference<DocumentState> saved;
+    private readonly SaveReceipts savedImages=new();
+    private sealed class SavedImage(string? path) {public string? Path=path;}
+    private sealed class SaveReceipts
+    {
+        public readonly ConditionalWeakTable<DocumentState,SavedImage> Files=new();
+        private readonly List<WeakReference<EditDocument>> owners=new();
+        public void Attach(EditDocument document)
+        {owners.RemoveAll(owner=>!owner.TryGetTarget(out _));owners.Add(new WeakReference<EditDocument>(document));}
+        public void Notify()
+        {foreach(var owner in owners.ToArray())if(owner.TryGetTarget(out var document))document.Changed?.Invoke();}
+        public bool Invalidate(string path)
+        {bool changed=false;foreach(var pair in Files)if(string.Equals(pair.Value.Path,path,StringComparison.OrdinalIgnoreCase)){pair.Value.Path=null;changed=true;}return changed;}
+    }
 
     public EditDocument(BitmapSource source)
     {
@@ -34,13 +48,16 @@ public sealed class EditDocument
         saved = new WeakReference<DocumentState>(initial);
         history.Add(initial);
         historyCosts.Add(0);
+        savedImages.Attach(this);
     }
 
     public BitmapSource Source { get; }
+    public string? SavedPath => savedImages.Files.TryGetValue(State,out var image)?image.Path:null;
+    public bool IsSaved => SavedPath is not null;
     public DocumentState State => history[position];
     public bool CanUndo => position > 0;
     public bool CanRedo => position < history.Count - 1;
-    public bool IsDirty => !saved.TryGetTarget(out DocumentState? state) || !ReferenceEquals(State, state);
+    public bool IsDirty => savedImages.Files.TryGetValue(State,out var image)?image.Path is null:(!saved.TryGetTarget(out DocumentState? state) || !ReferenceEquals(State, state));
     public event Action? Changed;
 
     public void Commit(DocumentState state)
@@ -89,10 +106,27 @@ public sealed class EditDocument
         Changed?.Invoke();
     }
 
-    public void MarkSaved()
+    public void MarkSaved(string? path=null)
     {
+        if(path is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(path);
+            savedImages.Invalidate(path);
+            savedImages.Files.Remove(State);savedImages.Files.Add(State,new SavedImage(path));
+        }
         saved.SetTarget(State);
-        Changed?.Invoke();
+        savedImages.Notify();
+    }
+
+    public void InvalidateSavedFile(string path)
+    {if(savedImages.Invalidate(path))savedImages.Notify();}
+
+    // Editors have independent edits/undo, but recognize files exported from the same capture snapshot.
+    public EditDocument Fork() => new(Source,State,savedImages,saved.TryGetTarget(out var clean)?clean:null);
+    private EditDocument(BitmapSource source,DocumentState state,SaveReceipts images,DocumentState? clean)
+    {
+        Source=source;history.Add(state);long cost=Validate(state.Annotations);historyCosts.Add(cost);retainedCost=cost;
+        savedImages=images;saved=new WeakReference<DocumentState>(clean!);savedImages.Attach(this);
     }
 
     private static long Validate(IReadOnlyList<Annotation> annotations)

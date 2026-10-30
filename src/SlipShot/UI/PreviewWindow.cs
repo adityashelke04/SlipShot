@@ -30,11 +30,12 @@ internal sealed class PreviewWindow : Window
     private bool dragging;
     private bool closeRequested;
     private bool copying;
+    private bool saving;
 
     internal bool IsDragging => dragging;
 
     internal PreviewWindow(BitmapSource image, CaptureMonitor monitor, int seconds, Action edit, Func<Task> copy,
-        Action save, Action pin, Action<DependencyObject, BitmapSource>? drag = null)
+        Func<Task<bool>> save, Action pin, Action<DependencyObject, BitmapSource>? drag = null,EditDocument? document=null)
     {
         this.monitor = monitor;
         previewDuration = TimeSpan.FromSeconds(seconds);
@@ -111,7 +112,11 @@ internal sealed class PreviewWindow : Window
         AddAction("Edit", "M 2,11 L 1,15 L 5,14 L 14,5 L 10,1 Z M 8,3 L 12,7", edit, true);
         Button? copyButton=null;
         copyButton=AddAction("Copy", "M 5,5 L 14,5 L 14,15 L 5,15 Z M 2,11 L 1,11 L 1,1 L 10,1 L 10,2", ()=>_ = CopyImageAsync());
-        AddAction("Save", "M 2,1 L 11,1 L 15,5 L 15,15 L 1,15 L 1,1 Z M 5,1 L 5,6 L 11,6 L 11,1 M 5,15 L 5,10 L 11,10 L 11,15", save);
+        bool savedHere=document?.IsSaved==true;
+        Button? saveButton=null;
+        saveButton=AddAction("Save", "M 2,1 L 11,1 L 15,5 L 15,15 L 1,15 L 1,1 Z M 5,1 L 5,6 L 11,6 L 11,1 M 5,15 L 5,10 L 11,10 L 11,15", ()=>_ = SaveImageAsync());
+        UpdateSaveState();if(document is not null)document.Changed+=UpdateSaveState;
+        MouseEnter+=(_,_)=>{if(document is not null)ImageFiles.RefreshSavedState(document);};
         AddAction("Pin", "M 5,1 L 11,1 M 6,1 L 6,6 L 3,10 L 13,10 L 10,6 L 10,1 M 8,10 L 8,15", pin);
         var actionGroup = new Border { Child = actions, CornerRadius = new CornerRadius(9), Padding = new Thickness(2), Margin = new Thickness(0, 12, 0, 0) };
         actionGroup.SetResourceReference(Border.BackgroundProperty, "Canvas");
@@ -198,7 +203,23 @@ internal sealed class PreviewWindow : Window
             clock.Start();
             timer.Start();
         };
-        Closed += (_, _) => { timer.Stop(); clock.Stop(); gesture.Cancel(); thumbnail.Source = null; };
+        Closed += (_, _) => { timer.Stop(); clock.Stop(); gesture.Cancel(); thumbnail.Source = null;if(document is not null)document.Changed-=UpdateSaveState; };
+
+        void UpdateSaveState()
+        {
+            bool alreadySaved=document?.IsSaved??savedHere;
+            saveButton!.IsEnabled=!saving&&!alreadySaved;
+            if(saveButton.Content is StackPanel content && content.Children[1] is TextBlock label)label.Text=alreadySaved?"Saved":"Save";
+            AutomationProperties.SetName(saveButton,alreadySaved?"Image saved":"Save");
+        }
+        async Task SaveImageAsync()
+        {
+            if(saving||(document?.IsSaved??savedHere))return;
+            saving=true;UpdateSaveState();hint.Text="Saving image…";
+            try {savedHere=await save();hint.Text=savedHere?"Saved to your capture folder":"Not saved · try again";}
+            catch(Exception error){hint.Text="Save failed · try again";hint.ToolTip=error.Message;}
+            finally {saving=false;UpdateSaveState();lifetime=new PreviewLifetime(previewDuration);clock.Restart();}
+        }
 
         async Task CopyImageAsync()
         {
@@ -240,7 +261,7 @@ internal sealed class PreviewWindow : Window
             captured.ReleaseMouseCapture();
         IntPtr handle=new WindowInteropHelper(this).Handle;
         bool passive=Native.PointerInside(handle) || (Native.GetForegroundWindow()==handle && IsKeyboardFocusWithin);
-        if (lifetime.Advance(elapsed,passive,!IsVisible || gesture.Holding || dragging || copying)) Dismiss();
+        if (lifetime.Advance(elapsed,passive,!IsVisible || gesture.Holding || dragging || copying || saving)) Dismiss();
     }
 
     internal void Dismiss()

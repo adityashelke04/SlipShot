@@ -1,14 +1,33 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using SlipShot.Core;
 
 namespace SlipShot.Services;
 
 public static class ImageFiles
 {
+    public static void RecordSavedFile(EditDocument document,string path,IEnumerable<EditDocument> openDocuments)
+    {
+        // Explicit Save As may replace a file exported by another still-open capture.
+        foreach(var other in openDocuments)other.InvalidateSavedFile(path);
+        document.MarkSaved(path);
+    }
+    public static void RefreshSavedState(EditDocument document)
+    {if(document.SavedPath is string path && !File.Exists(path))document.InvalidateSavedFile(path);}
+
+    public static string SaveDocument(EditDocument document,string directory,DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        RefreshSavedState(document);
+        if(document.SavedPath is string existing && File.Exists(existing))return existing;
+        string path=QuickSave(DocumentRenderer.Render(document),directory,now);
+        document.MarkSaved(path);return path;
+    }
     public static string DefaultSaveDirectory
     {
         get

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5-preview.2 — 2026-10-31
+
+Save now remembers successful exports per capture snapshot. Unchanged repeat saves are no-ops; buttons become disabled Saved. Capture previews and reopened editors share save receipts but keep independent edits. Undo/redo recognizes already-exported snapshots. Failed/deleted exports remain recoverable, and confirmed Save As overwrites invalidate stale receipts. Separate copies require the explicitly named Save a copy as action. Default GitHub branch becomes main; older master history remains.
+
 ## 0.2.4-preview.1 — 2026-10-30
 
 Save and Ctrl+S now write a uniquely named PNG directly to the configured SlipShot folder, without a location dialog. Default for this F-drive install is F:/SlipShot Captures; missing folders are created on explicit Save. Save As remains in the editor arrow menu and Ctrl+Shift+S for other paths/JPEG. Folder errors do not silently redirect or mark the document saved. No automatic saving on capture added.

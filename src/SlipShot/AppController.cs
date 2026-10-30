@@ -125,9 +125,10 @@ internal sealed class AppController : IDisposable
     private void ShowPreview()
     {
         if(disposed||exitRequested||captureGate.IsBusy||preview is not null||queue.Current is not Captured shot)return;
+        ImageFiles.RefreshSavedState(shot.Document);
         var card=new PreviewWindow(shot.Image,shot.Monitor,settings.PreviewSeconds,
             ()=>OpenEditor(shot),()=>CopyAsync(new EditDocument(shot.Image)),
-            ()=>_ = SaveAsync(new EditDocument(shot.Image)),()=> {try {Pin(shot.Image);}catch(InvalidOperationException ex){Notify(ex.Message);} },DragImage);
+            ()=>SaveAsync(shot.Document),()=> {try {Pin(shot.Image);}catch(InvalidOperationException ex){Notify(ex.Message);} },DragImage,shot.Document);
         preview=card;
         card.Closed+=(_,_)=> {if(!ReferenceEquals(preview,card))return;preview=null;if(!suppressAdvance)queue.Clear();};
         card.Show();
@@ -155,8 +156,11 @@ internal sealed class AppController : IDisposable
 
     private void OpenEditor(Captured shot)
     {
+        ImageFiles.RefreshSavedState(shot.Document);
+        var existing=documents.FirstOrDefault(pair=>ReferenceEquals(pair.Value.Source,shot.Image)).Key;
+        if(existing is not null){existing.Activate();preview?.Dismiss();return;}
         if(editors.Count>=3){Notify("Three editors are already open. Close one before editing another capture.");return;}
-        var document=new EditDocument(shot.Image);
+        var document=shot.Document.Fork();
         var editor=new EditorWindow(document,SaveAsync,CopyAsync,Pin,SaveAsAsync);
         editors.Add(editor);documents.Add(editor,document);
         editor.SourceInitialized+=(_,_)=>Native.Protect(editor,false);
@@ -182,13 +186,15 @@ internal sealed class AppController : IDisposable
     {try {await CopyAsync(new EditDocument(image));}catch(OperationCanceledException){}catch(Exception ex) when(IsExpected(ex)){Notify("Capture is ready, but automatic copy failed. Use Copy on the preview to retry.");}}
     private Task<bool> SaveAsync(EditDocument document)
     {
+        ImageFiles.RefreshSavedState(document);
+        if(document.SavedPath is string existing && File.Exists(existing))return Task.FromResult(true);
         if(saving)return Task.FromResult(false);saving=true;
         try
         {
             if(!ResourcePolicy.CanAllocate(RetainedBytes(),(long)document.State.Crop.Width*(long)document.State.Crop.Height))throw new InvalidOperationException("Close another editor or reference before saving this image.");
             string folder=string.IsNullOrWhiteSpace(settings.SaveDirectory)?ImageFiles.DefaultSaveDirectory:settings.SaveDirectory;
-            string path=ImageFiles.QuickSave(DocumentRenderer.Render(document),folder,DateTime.Now);
-            document.MarkSaved();Notify("Saved to "+path);return Task.FromResult(true);
+            string path=ImageFiles.SaveDocument(document,folder,DateTime.Now);
+            Notify("Saved to "+path);return Task.FromResult(true);
         }
         catch(Exception ex) when(IsExpected(ex))
         {MessageBox.Show("Could not save to your SlipShot folder. Check the save folder in Settings, or use Save As in the editor. "+Friendly(ex),"SlipShot",MessageBoxButton.OK,MessageBoxImage.Warning);return Task.FromResult(false);}
@@ -209,7 +215,8 @@ internal sealed class AppController : IDisposable
             // New-file writes remain non-overwriting even if another process creates a file after this check.
             var background=(Color)ColorConverter.ConvertFromString(settings.JpegBackground);
             ImageFiles.Save(DocumentRenderer.Render(document),dialog.FileName,exists,settings.JpegQuality,background);
-            document.MarkSaved();Notify("Image saved.");return Task.FromResult(true);
+            ImageFiles.RecordSavedFile(document,dialog.FileName,documents.Values.Concat(latest is null?Array.Empty<EditDocument>():new[]{latest.Document}));
+            Notify("Image saved.");return Task.FromResult(true);
         }
         catch(Exception ex) when(IsExpected(ex)) {MessageBox.Show("Could not save the image. "+Friendly(ex),"SlipShot",MessageBoxButton.OK,MessageBoxImage.Warning);return Task.FromResult(false);}
         finally {saving=false;}
@@ -267,5 +274,6 @@ internal sealed class AppController : IDisposable
         hotkeys?.Dispose();if(tray is not null){tray.Visible=false;tray.ContextMenuStrip?.Dispose();tray.Dispose();}icon?.Dispose();
         suppressAdvance=true;preview?.Close();overlay?.Close();foreach(var pin in pins.ToArray())pin.Close();queue.Clear();latest=null;lifetime.Dispose();
     }
-    private sealed record Captured(BitmapSource Image,CaptureMonitor Monitor);
+    private sealed record Captured(BitmapSource Image,CaptureMonitor Monitor)
+    {public EditDocument Document {get;}=new(Image);}
 }

@@ -4,6 +4,10 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using System.Windows.Controls;
+using System.Windows.Automation;
+using System.Linq;
+using SlipShot.Core;
 using SlipShot.Services;
 using SlipShot.UI;
 using NUnit.Framework;
@@ -13,6 +17,31 @@ namespace SlipShot.Tests;
 [TestFixture,Apartment(ApartmentState.STA),NonParallelizable]
 public class PreviewWindowTests
 {
+    [Test] public void SuccessfulPreviewSaveDisablesSaveAndCannotRunTwice()
+    {
+        _=Application.Current??new Application {ShutdownMode=ShutdownMode.OnExplicitShutdown};Theme.Configure("Light",true);
+        var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=800,Bottom=600},new Native.RectI {Right=800,Bottom=600},1);
+        int saves=0;var doc=new EditDocument(CoreTests.Image());
+        var window=new PreviewWindow(doc.Source,monitor,10,()=>{},()=>System.Threading.Tasks.Task.CompletedTask,()=>{saves++;doc.MarkSaved("synthetic-file.png");return System.Threading.Tasks.Task.FromResult(true);},()=>{},document:doc);
+        try
+        {
+            Button button=Descendants(window).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Save");
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.That(saves,Is.EqualTo(1));Assert.That(button.IsEnabled,Is.False);Assert.That(AutomationProperties.GetName(button),Is.EqualTo("Image saved"));
+            Assert.That(new WindowInteropHelper(window).Handle,Is.EqualTo(IntPtr.Zero));
+        }
+        finally{window.Close();}
+    }
+    [Test] public void FailedPreviewSaveRemainsAvailableForRetry()
+    {
+        _=Application.Current??new Application {ShutdownMode=ShutdownMode.OnExplicitShutdown};Theme.Configure("Light",true);
+        var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=800,Bottom=600},new Native.RectI {Right=800,Bottom=600},1);
+        int saves=0;var window=new PreviewWindow(CoreTests.Image(),monitor,10,()=>{},()=>System.Threading.Tasks.Task.CompletedTask,()=>{saves++;return System.Threading.Tasks.Task.FromResult(false);},()=>{});
+        try{Button button=Descendants(window).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Save");button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Assert.That(button.IsEnabled,Is.True);button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Assert.That(saves,Is.EqualTo(2));}
+        finally{window.Close();}
+    }
+    private static System.Collections.Generic.IEnumerable<DependencyObject> Descendants(DependencyObject node)
+    {yield return node;foreach(object child in LogicalTreeHelper.GetChildren(node))if(child is DependencyObject item)foreach(var descendant in Descendants(item))yield return descendant;}
     [Test]
     public void UnrenderedWindowStillClosesWhenFadeCannotComplete()
     {
@@ -24,7 +53,7 @@ public class PreviewWindowTests
         bool previous=Theme.MotionEnabled;motion.SetValue(null,true);
         var frame=new DispatcherFrame();
         var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=800,Bottom=600},new Native.RectI {Right=800,Bottom=600},1);
-        var window=new PreviewWindow(CoreTests.Image(),monitor,10,()=>{},()=>System.Threading.Tasks.Task.CompletedTask,()=>{},()=>{});
+        var window=new PreviewWindow(CoreTests.Image(),monitor,10,()=>{},()=>System.Threading.Tasks.Task.CompletedTask,()=>System.Threading.Tasks.Task.FromResult(false),()=>{});
         bool closed=false;
         window.Closed+=(_,_)=>{closed=true;frame.Continue=false;};
         var watchdog=new DispatcherTimer {Interval=TimeSpan.FromSeconds(2)};

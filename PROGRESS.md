@@ -1,5 +1,9 @@
 # Progress
 
+## Latest: 0.2.5-preview.2 save once
+
+User reported repeatSave stilloffered andduplicatePNGs; reproduced actualcontroller3saves→3files, fixedto1. Captured.Document retainsbaseline; independenteditorFork shares weakper-snapshot save receipts. Savedbuttonsdisabled; explicitSaveacopyas separate; no pickerfromquickSave. Failed/deletedfile recovery, undo/redo receipts, overwriteinvalidation acrosslivecaptures andweakownerUIupdates addedafterindependentreview.114tests passed; reviewverdictShip. Version0.2.5-preview.2 packaged/installed for normalrestart; existingruntime unsavedwork preserved. Userrequested main; finalcommit/push main anddefaultbranch switch complete asrecordedinhandoff. No existinguserimagesdeleted.
+
 ## Latest: 0.2.4-preview.1 quick save
 
 Save now uses configured SaveDirectory or same-local-drive SlipShot Captures (F:/SlipShot Captures here), creating it on explicit Save and choosing unique PNG names without overwriting. Settings quick-save path may be new/absolute; Save As preserved via editorarrow/CtrlShiftS for JPEG/otherpaths. No automatic capture saving. Full suite104passed; compactUI reviewed; independentreview found no blocking issue. Latest package/install version0.2.4-preview.1; activate by normal Exit/reopen from Start. Current installed0.2.3process preserved; no unsavedwork discarded. Evidence docs/QUICK_SAVE_REVIEW.md. Commit/push authorized.

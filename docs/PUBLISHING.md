@@ -4,6 +4,8 @@ The publish failure was caused by this project having no origin remote or upstre
 
 With explicit user authorization, created **private** `adityashelke04/SlipShot`, connected HTTPS origin, pushed existing commits, and set master to track origin/master. Repository remains private. Source commits are pushed; portable binaries/screenshots/caches are ignored and not published as releases.
 
+The user subsequently requested main. Current development/default branch is **main**, tracking **origin/main**. The older master branch is preserved without force-pushing or deleting history. Reviewed synthetic documentation images are the only screenshot exceptions; personal captures and binaries remain excluded.
+
 Normal workflow from this repository:
 
 ```powershell

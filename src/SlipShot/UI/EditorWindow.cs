@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using SlipShot.Core;
+using SlipShot.Services;
 
 namespace SlipShot.UI;
 
@@ -95,6 +96,7 @@ public sealed class EditorWindow : Window
         Height = Math.Max(MinHeight, Math.Min(820, workArea.Height - 32));
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Theme.Apply(this);
+        Activated+=(_,_)=>ImageFiles.RefreshSavedState(_document);
 
         _surface = new DrawingSurface(this) { Focusable = true, SnapsToDevicePixels = true };
         AutomationProperties.SetName(_surface, "Screenshot editing canvas");
@@ -162,9 +164,9 @@ public sealed class EditorWindow : Window
         _copyButton = AddButton(exports, "Copy", () => _ = CopyAsync(), "Copy flattened image (Ctrl+C)");
         _saveButton = AddButton(exports, "Save", () => _ = SaveAsync(), "Save PNG to your SlipShot folder (Ctrl+S)", true);
         var saveMenu=new ContextMenu();
-        var saveAsItem=new MenuItem {Header="Save As…",InputGestureText="Ctrl+Shift+S"};
+        var saveAsItem=new MenuItem {Header="Save a copy as…",InputGestureText="Ctrl+Shift+S"};
         saveAsItem.Click+=(_,_)=>_ = SaveAsync(true);saveMenu.Items.Add(saveAsItem);
-        _saveMore=Theme.IconButton("More save options","M 3,5 L 8,10 L 13,5",()=>saveMenu.IsOpen=true,size:28);
+        _saveMore=Theme.IconButton("Save a separate copy…","M 3,5 L 8,10 L 13,5",()=>saveMenu.IsOpen=true,size:28);
         saveMenu.PlacementTarget=_saveMore;_saveMore.ContextMenu=saveMenu;exports.Children.Add(_saveMore);
         _copyButton.Padding = _saveButton.Padding = new Thickness(14, 7, 14, 7);
         _copyButton.Margin = new Thickness(0, 0, 6, 0);
@@ -440,6 +442,7 @@ public sealed class EditorWindow : Window
 
     private void DocumentChanged()
     {
+        RefreshSaveState();
         if (_selectedId is not null && Selected is null) _selectedId = null;
         _resetCrop.IsEnabled = !_busy && _document.State.Crop != ImageBounds;
         var crop = _document.State.Crop;
@@ -959,6 +962,15 @@ public sealed class EditorWindow : Window
         foreach (var button in _toolButtons.Values.Concat(_colorButtons)) button.IsEnabled = !busy;
         _resetCrop.IsEnabled = !busy && _document.State.Crop != ImageBounds;
         RefreshProperties();
+        RefreshSaveState();
+    }
+
+    private void RefreshSaveState()
+    {
+        _saveButton.IsEnabled=!_busy&&!_document.IsSaved;
+        if(_saveButton.Content is TextBlock label)label.Text=_document.IsSaved?"Saved":"Save";
+        _saveButton.ToolTip=_document.IsSaved?"This version is already saved. Edit to enable Save, or choose Save a copy as.":"Save PNG to your SlipShot folder (Ctrl+S)";
+        AutomationProperties.SetName(_saveButton,_document.IsSaved?"Image saved":"Save image");
     }
 
     private async Task<bool> SaveAsync(bool saveAs=false)
@@ -984,7 +996,7 @@ public sealed class EditorWindow : Window
         CancelGesture();
         SetBusy(true);
         ShowStatus("Copying image…");
-        try { await _copy(_document); ShowStatus("Flattened image copied. Save to keep a file."); }
+        try { await _copy(_document); ShowStatus(_document.IsSaved?"Image copied. This version is already saved.":"Flattened image copied. Save to keep a file."); }
         catch (Exception ex) { ShowStatus("Could not copy the image. " + ex.Message); }
         finally { SetBusy(false); }
     }
@@ -1001,6 +1013,7 @@ public sealed class EditorWindow : Window
     {
         if (_allowClose) return;
         if (_busy || _closing) { e.Cancel = true; return; }
+        ImageFiles.RefreshSavedState(_document);
         CancelGesture();
         if (!_document.IsDirty) return;
         e.Cancel = true;

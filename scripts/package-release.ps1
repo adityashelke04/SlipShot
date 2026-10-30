@@ -1,4 +1,4 @@
-param([string]$Version='0.2.4-preview.1')
+param([string]$Version='0.2.5-preview.2')
 $ErrorActionPreference='Stop'
 . "$PSScriptRoot/environment.ps1"
 if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$') { throw 'Use a simple semantic version.' }
@@ -14,7 +14,7 @@ foreach($name in 'README.md','TESTING.md','LICENSE','DEPENDENCIES.md','CHANGELOG
 Copy-Item -LiteralPath (Join-Path $repo '.cache/tooling/microsoft.netcore.app.host.win-x64.8.0.11/LICENSE.TXT') -Destination (Join-Path $destination 'DOTNET-LICENSE.txt')
 $releaseDocs=Join-Path $destination 'docs'
 New-Item -ItemType Directory -Path $releaseDocs | Out-Null
-foreach($name in 'PUBLISHING.md','DRAG_REVIEW.md','REFERENCE_REFRESH.md','EDITOR_REDESIGN.md','PREVIEW_REVIEW.md','QUICK_SAVE_REVIEW.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/$name") -Destination $releaseDocs}
+foreach($name in 'PUBLISHING.md','DRAG_REVIEW.md','REFERENCE_REFRESH.md','EDITOR_REDESIGN.md','PREVIEW_REVIEW.md','QUICK_SAVE_REVIEW.md','SAVE_ONCE_REVIEW.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/$name") -Destination $releaseDocs}
 $imageDocs=Join-Path $releaseDocs 'images'
 New-Item -ItemType Directory -Path $imageDocs | Out-Null
 foreach($name in 'editor-dark.png','editor-light.png','preview-dark.png','README.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/images/$name") -Destination $imageDocs}
