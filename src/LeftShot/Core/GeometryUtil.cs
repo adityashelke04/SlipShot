@@ -1,0 +1,104 @@
+using System;
+using System.Linq;
+using System.Windows;
+
+namespace LeftShot.Core;
+
+public static class GeometryUtil
+{
+    public static Rect Normalize(Point a, Point b, Rect bounds)
+    {
+        var rectangle = new Rect(a, b);
+        rectangle.Intersect(bounds);
+        return rectangle;
+    }
+
+    public static Point ToPixels(Point local, double scale, Point physicalOrigin)
+    {
+        ValidateScale(scale);
+        return new Point(physicalOrigin.X + local.X * scale, physicalOrigin.Y + local.Y * scale);
+    }
+
+    public static Point ToDips(Point physical, double scale, Point physicalOrigin)
+    {
+        ValidateScale(scale);
+        return new Point((physical.X - physicalOrigin.X) / scale, (physical.Y - physicalOrigin.Y) / scale);
+    }
+
+    private static void ValidateScale(double scale)
+    {
+        if (!double.IsFinite(scale) || scale <= 0) throw new ArgumentOutOfRangeException(nameof(scale));
+    }
+
+    public static Rect PixelBounds(Rect rectangle, Rect limits)
+    {
+        if (rectangle.IsEmpty || !double.IsFinite(rectangle.X) || !double.IsFinite(rectangle.Y)
+            || !double.IsFinite(rectangle.Width) || !double.IsFinite(rectangle.Height)) return Rect.Empty;
+        var result = new Rect(new Point(Math.Floor(rectangle.Left), Math.Floor(rectangle.Top)),
+            new Point(Math.Ceiling(rectangle.Right), Math.Ceiling(rectangle.Bottom)));
+        result.Intersect(limits);
+        return result;
+    }
+
+    public static bool HitTest(Annotation annotation, Point point, double tolerance)
+    {
+        double radius = Math.Max(0, tolerance) + Math.Max(0, annotation.StrokeWidth) / 2;
+        if (annotation.Kind is ToolKind.Line or ToolKind.Arrow or ToolKind.Pen or ToolKind.Highlighter)
+        {
+            var points = annotation.Points;
+            if (points is null || points.Count == 0)
+                return SegmentDistance(point, annotation.Bounds.TopLeft, annotation.Bounds.BottomRight) <= radius;
+            if (points.Count == 1) return (point - points[0]).Length <= radius;
+            for (int i = 1; i < points.Count; i++)
+                if (SegmentDistance(point, points[i - 1], points[i]) <= radius) return true;
+            return false;
+        }
+        Rect bounds = annotation.Bounds;
+        bounds.Inflate(radius, radius);
+        if (!bounds.Contains(point)) return false;
+        if (annotation.Kind == ToolKind.Ellipse && annotation.Bounds.Width > 0 && annotation.Bounds.Height > 0)
+        {
+            double rx = annotation.Bounds.Width / 2, ry = annotation.Bounds.Height / 2;
+            double dx = point.X - annotation.Bounds.X - rx, dy = point.Y - annotation.Bounds.Y - ry;
+            double outer = dx * dx / ((rx + radius) * (rx + radius)) + dy * dy / ((ry + radius) * (ry + radius));
+            if (outer > 1) return false;
+            if (annotation.Filled || rx <= radius || ry <= radius) return true;
+            return dx * dx / ((rx - radius) * (rx - radius)) + dy * dy / ((ry - radius) * (ry - radius)) >= 1;
+        }
+        if (annotation.Kind == ToolKind.Rectangle && !annotation.Filled)
+        {
+            Rect interior = annotation.Bounds;
+            if (interior.Width <= 2 * radius || interior.Height <= 2 * radius) return true;
+            interior.Inflate(-radius, -radius);
+            return !interior.Contains(point);
+        }
+        return true;
+    }
+
+    private static double SegmentDistance(Point point, Point start, Point end)
+    {
+        Vector segment = end - start;
+        if (segment.LengthSquared == 0) return (point - start).Length;
+        double fraction = Math.Clamp(Vector.Multiply(point - start, segment) / segment.LengthSquared, 0, 1);
+        return (point - (start + segment * fraction)).Length;
+    }
+
+    public static Annotation Move(Annotation annotation, Vector offset)
+    {
+        Rect bounds = annotation.Bounds;
+        bounds.Offset(offset);
+        return annotation with { Bounds = bounds, Points = annotation.Points?.Select(point => point + offset).ToArray() };
+    }
+
+    public static Annotation Resize(Annotation annotation, Rect bounds)
+    {
+        Rect old = annotation.Bounds;
+        return annotation with
+        {
+            Bounds = bounds,
+            Points = annotation.Points?.Select(point => new Point(
+                bounds.X + (old.Width == 0 ? 0 : (point.X - old.X) * bounds.Width / old.Width),
+                bounds.Y + (old.Height == 0 ? 0 : (point.Y - old.Y) * bounds.Height / old.Height))).ToArray()
+        };
+    }
+}

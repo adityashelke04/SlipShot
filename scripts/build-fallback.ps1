@@ -11,7 +11,9 @@ $desktop = Get-ChildItem "$dotnetRoot/shared/Microsoft.WindowsDesktop.App/8.*" -
 if (!$runtime -or !$desktop) { throw '.NET 8 x64 Windows Desktop Runtime is required.' }
 $out = Join-Path $repo 'artifacts/portable'
 New-Item -ItemType Directory -Force $out | Out-Null
-$refs = @(Get-ChildItem $runtime.FullName,$desktop.FullName -Filter *.dll | Where-Object { $_.Name -notmatch '^(mscorrc|PenImc|PresentationNative|vcruntime|wpfgfx|D3DCompiler)' } | ForEach-Object { '-r:"' + $_.FullName + '"' })
+$refs = @(Get-ChildItem $runtime.FullName,$desktop.FullName -Filter *.dll | Where-Object {
+    try { $null = [Reflection.AssemblyName]::GetAssemblyName($_.FullName); $true } catch { $false }
+} | ForEach-Object { '-r:"' + $_.FullName + '"' })
 $sources = @(Get-ChildItem "$repo/src/LeftShot" -Filter *.cs -Recurse | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
 if ($CoreOnly) { $sources = @($sources | Where-Object { $_.FullName -match '[\\/]Core[\\/]' }) }
 $options = @('-nologo','-nullable:enable','-langversion:12','-platform:x64','-optimize+','-deterministic+','-warnaserror+')
