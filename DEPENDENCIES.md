@@ -15,6 +15,6 @@ HostModel's netstandard assembly uses framework-provided System.Reflection.Metad
 
 Sources/licenses: [Roslyn](https://github.com/dotnet/roslyn/blob/main/License.txt), [NUnit](https://github.com/nunit/nunit/blob/main/LICENSE.txt), [NUnitLite package](https://www.nuget.org/packages/NUnitLite/4.4.0), [.NET runtime](https://github.com/dotnet/runtime/blob/main/LICENSE.TXT), [HostModel package](https://www.nuget.org/packages/Microsoft.NET.HostModel/3.1.16). Package archives retain their license files in the local development cache. The portable package includes the .NET apphost license.
 
-Tray mark and editor tool icons are original geometric drawings authored for LeftShot under this repository's MIT license. No competitor assets or external icon packs. Synthetic visual fixtures contain invented checklist text and `example.test`, never user content. Public reference images were examined only for research and are not shipped or committed.
+Tray mark and editor tool icons are original geometric drawings authored for SlipShot under this repository's MIT license. No competitor assets or external icon packs. Synthetic visual fixtures contain invented checklist text and `example.test`, never user content. Public reference images were examined only for research and are not shipped or committed.
 
 No telemetry, paid API or runtime network dependency is present. Package restore is development-time network activity only.

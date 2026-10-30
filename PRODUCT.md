@@ -1,4 +1,4 @@
-# LeftShot
+# SlipShot
 
 Provisional name; no trademark availability claim. Independent, local-only Windows screenshot utility for people who want fast capture and annotation without interrupting their work or games.
 

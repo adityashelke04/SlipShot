@@ -1,8 +1,8 @@
 # GitHub publishing setup
 
-The publish failure was caused by this project having no origin remote or upstream. GitHub CLI was already installed and authenticated; reinstalling it or changing global Git settings was unnecessary.
+The publish failure was caused by this project having no origin remote or upstream. GitHub CLI was already installed and authenticated; reinstalling it or changing global Git settings was unnecessary. The repository was subsequently renamed from LeftShot to SlipShot at the user's request; origin now uses the canonical SlipShot URL.
 
-With explicit user authorization, created **private** `adityashelke04/LeftShot`, connected HTTPS origin, pushed existing commits, and set master to track origin/master. Repository remains private. Source commits are pushed; portable binaries/screenshots/caches are ignored and not published as releases.
+With explicit user authorization, created **private** `adityashelke04/SlipShot`, connected HTTPS origin, pushed existing commits, and set master to track origin/master. Repository remains private. Source commits are pushed; portable binaries/screenshots/caches are ignored and not published as releases.
 
 Normal workflow from this repository:
 

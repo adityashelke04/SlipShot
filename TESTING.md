@@ -42,11 +42,11 @@ New manual checks: drag the thumbnail into Explorer, Paint/an image-aware compos
 | Fullscreen/HDR | Borderless vs exclusive games, HDR and protected surfaces; limitations/error recovery | NOT RUN |
 | Resource lifecycle | Measure idle CPU and working set after repeated captures/cancels/editor/pin closes | NOT RUN |
 | SDK build | Restore/build/publish with supported SDK and runtime; fallback does not prove MSBuild path | NOT RUN (SDK absent) |
-| App launch | Execute packaged LeftShot.exe and verify apphost/runtime resolution | NOT RUN (gaming constraint) |
+| App launch | Execute packaged SlipShot.exe and verify apphost/runtime resolution | NOT RUN (gaming constraint) |
 
 ## Five-minute return checklist
 
-1. Launch `artifacts/portable/LeftShot.exe`. Find the tray icon. Open Settings; check hotkey and default privacy preferences.
+1. Launch `artifacts/portable/SlipShot.exe`. Find the tray icon. Open Settings; check hotkey and default privacy preferences.
 2. Capture a small region of a harmless document. Verify bottom-left preview on that monitor, no focus theft, hover pauses expiry. Escape a second capture and confirm nothing new appears.
 3. Edit: add arrow, text and redaction; crop; move/resize an annotation; undo/redo. Zoom and pan. Verify typing shortcuts stay within text.
 4. Copy into Paint and save PNG. Reopen the PNG, inspect redaction and dimensions. Try saving over it and cancel. Close an edited image with Cancel, then Discard.

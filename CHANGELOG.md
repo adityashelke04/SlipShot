@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2-preview.1 — 2026-10-30
+
+Renamed the application to **SlipShot**: UI/tray labels, generated image filenames, executable/assembly/project/namespace names, build scripts, current docs and synthetic demo images. Private GitHub repository renamed to adityashelke04/SlipShot. Shortcut remains Ctrl+Alt+S. Historical releases/audit records retain their original identity. Kept the legacy single-instance mutex and drag-file prefix to coexist safely with earlier builds and retained transfers.
+
 ## 0.2.1-preview.1 — 2026-10-30
 
 Default capture shortcut is now **Ctrl+Alt+S**, with no function key. Settings accept modified letter keys as well as function keys, reject numeric enum aliases and unmodified keys, and retain native conflict detection. Existing custom settings remain user-controlled. Includes new parser/mapping regression tests.

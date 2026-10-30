@@ -9,9 +9,9 @@ using System.Windows.Documents;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using LeftShot.Core;
-using LeftShot.UI;
-using LeftShot.Services;
+using SlipShot.Core;
+using SlipShot.UI;
+using SlipShot.Services;
 
 internal static class VisualCheck
 {
@@ -22,7 +22,7 @@ internal static class VisualCheck
         Directory.CreateDirectory(output);
         RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _ = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-        Type theme = typeof(EditorWindow).Assembly.GetType("LeftShot.UI.Theme", true)!;
+        Type theme = typeof(EditorWindow).Assembly.GetType("SlipShot.UI.Theme", true)!;
         MethodInfo configure = theme.GetMethod("Configure", BindingFlags.Public | BindingFlags.Static)!;
         foreach (string appearance in new[] { "Light", "Dark" })
         {

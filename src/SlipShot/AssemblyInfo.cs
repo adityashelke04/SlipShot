@@ -1,0 +1,9 @@
+using System.Runtime.CompilerServices;
+using System.Reflection;
+[assembly: AssemblyTitle("SlipShot")]
+[assembly: AssemblyProduct("SlipShot")]
+[assembly: AssemblyVersion("0.2.2.0")]
+[assembly: AssemblyFileVersion("0.2.2.0")]
+[assembly: AssemblyInformationalVersion("0.2.2-preview.1")]
+[assembly: InternalsVisibleTo("SlipShot.Tests")]
+[assembly: InternalsVisibleTo("VisualCheck")]

@@ -4,7 +4,7 @@ The editor remains a native WPF window with standard resizing, system menus, key
 
 ## Layout
 
-- The compact header carries the LeftShot wordmark and current pixel dimensions, grouped Undo/Redo, centered zoom controls, and Copy/Save at the right.
+- The compact header carries the SlipShot wordmark and current pixel dimensions, grouped Undo/Redo, centered zoom controls, and Copy/Save at the right.
 - A two-column tool rail keeps all twelve tools labeled and reachable without a full-width wall of buttons. Existing tool shortcuts and authored geometric icons remain.
 - A contextual strip shows the controls that apply to the current tool or selected annotation. Color defaults remain editable before drawing. Stroke appears for stroked shapes, Fill for boxes and ellipses, and font/text controls for text. Delete appears when an annotation is selected; Reset crop appears when applicable.
 - The image sits on the neutral `Canvas` surface with a single thin frame and a 20-DIP inset. The annotation list starts closed and can be toggled from the rail footer, alongside Pin.

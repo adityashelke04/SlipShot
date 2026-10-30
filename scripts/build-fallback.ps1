@@ -14,18 +14,18 @@ New-Item -ItemType Directory -Force $out | Out-Null
 $refs = @(Get-ChildItem $runtime.FullName,$desktop.FullName -Filter *.dll | Where-Object {
     try { $null = [Reflection.AssemblyName]::GetAssemblyName($_.FullName); $true } catch { $false }
 } | Group-Object Name | ForEach-Object { '-r:"' + $_.Group[-1].FullName + '"' })
-$sources = @(Get-ChildItem "$repo/src/LeftShot" -Filter *.cs -Recurse | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
+$sources = @(Get-ChildItem "$repo/src/SlipShot" -Filter *.cs -Recurse | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
 if ($CoreOnly) { $sources = @($sources | Where-Object { $_.FullName -match '[\\/]Core[\\/]' }) }
 $options = @('-nologo','-nullable:enable','-langversion:12','-platform:x64','-optimize+','-deterministic+','-warnaserror+')
 $target = if ($CoreOnly) { '-target:library' } else { '-target:winexe' }
-$response = $options + $target + ('-out:"' + "$out/LeftShot.dll" + '"') + $refs + @($sources | ForEach-Object { '"' + $_.FullName + '"' })
-if (!$CoreOnly) { $response += '-win32manifest:"' + "$repo/src/LeftShot/app.manifest" + '"' }
+$response = $options + $target + ('-out:"' + "$out/SlipShot.dll" + '"') + $refs + @($sources | ForEach-Object { '"' + $_.FullName + '"' })
+if (!$CoreOnly) { $response += '-win32manifest:"' + "$repo/src/SlipShot/app.manifest" + '"' }
 $rsp = Join-Path $repo '.tmp/app.rsp'
 [IO.File]::WriteAllLines($rsp,$response)
 & dotnet $compiler "@$rsp"
 if ($LASTEXITCODE -ne 0) { throw 'Application compilation failed.' }
 $config = '{"runtimeOptions":{"tfm":"net8.0","framework":{"name":"Microsoft.WindowsDesktop.App","version":"8.0.0"}}}'
-[IO.File]::WriteAllText("$out/LeftShot.runtimeconfig.json",$config)
+[IO.File]::WriteAllText("$out/SlipShot.runtimeconfig.json",$config)
 if (!$CoreOnly) {
     $buildTools = Join-Path $repo '.tmp/build-tools'
     New-Item -ItemType Directory -Force $buildTools | Out-Null
@@ -37,31 +37,31 @@ if (!$CoreOnly) {
     & dotnet $compiler "@$rsp"
     if ($LASTEXITCODE -ne 0) { throw 'Host packaging helper compilation failed.' }
     [IO.File]::WriteAllText("$buildTools/CreateHost.runtimeconfig.json",$config)
-    & dotnet "$buildTools/CreateHost.dll" "$tooling/microsoft.netcore.app.host.win-x64.8.0.11/runtimes/win-x64/native/apphost.exe" "$out/LeftShot.exe" "$out/LeftShot.dll"
+    & dotnet "$buildTools/CreateHost.dll" "$tooling/microsoft.netcore.app.host.win-x64.8.0.11/runtimes/win-x64/native/apphost.exe" "$out/SlipShot.exe" "$out/SlipShot.dll"
     if ($LASTEXITCODE -ne 0) { throw 'Host packaging failed.' }
 }
 if ($Test) {
     $testout = Join-Path $repo 'artifacts/tests'
     New-Item -ItemType Directory -Force $testout | Out-Null
-    Copy-Item "$out/LeftShot.dll" "$testout/LeftShot.dll"
+    Copy-Item "$out/SlipShot.dll" "$testout/SlipShot.dll"
     foreach ($package in 'nunit','nunitlite') {
         Get-ChildItem "$tooling/$package.4.4.0/lib/net8.0/*.dll" | Copy-Item -Destination $testout
     }
-    $testSources = @(Get-ChildItem "$repo/tests/LeftShot.Tests" -Filter *.cs -Recurse | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
+    $testSources = @(Get-ChildItem "$repo/tests/SlipShot.Tests" -Filter *.cs -Recurse | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
     if ($CoreOnly) { $testSources = @($testSources | Where-Object { $_.Name -in 'CoreTests.cs','TestProgram.cs' }) }
-    $response = $options + '-target:exe' + ('-out:"' + "$testout/LeftShot.Tests.dll" + '"') + $refs + @('-r:"' + "$testout/LeftShot.dll" + '"','-r:"' + "$testout/nunit.framework.dll" + '"','-r:"' + "$testout/nunitlite.dll" + '"') + @($testSources | ForEach-Object { '"' + $_.FullName + '"' })
+    $response = $options + '-target:exe' + ('-out:"' + "$testout/SlipShot.Tests.dll" + '"') + $refs + @('-r:"' + "$testout/SlipShot.dll" + '"','-r:"' + "$testout/nunit.framework.dll" + '"','-r:"' + "$testout/nunitlite.dll" + '"') + @($testSources | ForEach-Object { '"' + $_.FullName + '"' })
     [IO.File]::WriteAllLines($rsp,$response)
     & dotnet $compiler "@$rsp"
     if ($LASTEXITCODE -ne 0) { throw 'Test compilation failed.' }
-    [IO.File]::WriteAllText("$testout/LeftShot.Tests.runtimeconfig.json",$config)
-    & dotnet "$testout/LeftShot.Tests.dll" --workers=0 "--work=$testout" --result=TestResult.xml
+    [IO.File]::WriteAllText("$testout/SlipShot.Tests.runtimeconfig.json",$config)
+    & dotnet "$testout/SlipShot.Tests.dll" --workers=0 "--work=$testout" --result=TestResult.xml
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
 }
 if ($VisualCheck -and !$CoreOnly) {
     $visualTools = Join-Path $repo 'artifacts/visual'
     New-Item -ItemType Directory -Force $visualTools | Out-Null
-    Copy-Item "$out/LeftShot.dll" $visualTools
-    $response = $options + '-target:exe' + ('-out:"' + "$visualTools/VisualCheck.dll" + '"') + $refs + ('-r:"' + "$out/LeftShot.dll" + '"') + ('"' + "$PSScriptRoot/VisualCheck.cs" + '"')
+    Copy-Item "$out/SlipShot.dll" $visualTools
+    $response = $options + '-target:exe' + ('-out:"' + "$visualTools/VisualCheck.dll" + '"') + $refs + ('-r:"' + "$out/SlipShot.dll" + '"') + ('"' + "$PSScriptRoot/VisualCheck.cs" + '"')
     [IO.File]::WriteAllLines($rsp,$response)
     & dotnet $compiler "@$rsp"
     if ($LASTEXITCODE -ne 0) { throw 'Synthetic visual harness compilation failed.' }

@@ -13,17 +13,17 @@ for path in files:
     for pattern in patterns:
         if re.search(pattern, text):
             findings.append(f'{path.relative_to(root)}: {pattern}')
-for path in [root / 'Directory.Build.props', *root.glob('**/*.csproj'), root / 'src/LeftShot/app.manifest']:
+for path in [root / 'Directory.Build.props', *root.glob('**/*.csproj'), root / 'src/SlipShot/app.manifest']:
     if '.cache' not in path.parts:
         ET.parse(path)
-binary = (root / 'artifacts/portable/LeftShot.exe').read_bytes()
+binary = (root / 'artifacts/portable/SlipShot.exe').read_bytes()
 offset = struct.unpack_from('<I', binary, 0x3c)[0]
 assert binary[offset:offset+4] == b'PE\0\0'
 assert struct.unpack_from('<H', binary, offset+4)[0] == 0x8664, 'Expected x64 host'
 assert struct.unpack_from('<H', binary, offset+24+68)[0] == 2, 'Expected Windows GUI subsystem'
-assert b'LeftShot.dll\0' in binary, 'Apphost target missing'
+assert b'SlipShot.dll\0' in binary, 'Apphost target missing'
 assert b'PerMonitorV2' in binary or 'PerMonitorV2'.encode('utf-16-le') in binary, 'DPI manifest missing'
 assert not findings, '\n'.join(findings)
 print(f'Static source scan: {len(files)} C# files; no selected network, logging, placeholder or foreground-forcing APIs found.')
-print('Project XML parsed; native host PE is x64/Windows GUI, targets LeftShot.dll, contains PerMonitorV2 manifest.')
+print('Project XML parsed; native host PE is x64/Windows GUI, targets SlipShot.dll, contains PerMonitorV2 manifest.')
 print('These bounded static checks do not prove absence of all network activity, native correctness or application launch.')

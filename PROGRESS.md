@@ -1,5 +1,9 @@
 # Progress
 
+## Latest: SlipShot 0.2.2-preview.1
+
+Renamed product, projects, namespaces, executable/apphost, generated filenames, current docs and safe synthetic README images to SlipShot. Source directories now src/SlipShot and tests/SlipShot.Tests; solution SlipShot.sln. Private GitHub repository renamed to adityashelke04/SlipShot, origin updated. Ctrl+Alt+S unchanged. Historical records/releases untouched; legacy mutex and .leftshot-drag prefix deliberately retained for compatibility. Serial build87tests passed,16offscreen UI fixtures regenerated; static host/source checks passed. New release path artifacts/releases/0.2.2-preview.1/win-x64/SlipShot.exe. No desktop capture or personal screenshot used; app launch not performed in this rename.
+
 ## Repository handoff
 
 Added3reviewed synthetic actual-WPF UI images to docs/images and README, with reproducible generator/provenance. No desktop or personal screenshots used. Tightened ignore rules for private runtime data, credentials, binaries and images; only3exact demoPNG paths allowed. Added bounded tracked/history privacy checker and docs/REPOSITORY_PRIVACY.md. Source compiled during freshoffscreen rendering; app behavior unchanged, preceding87tests passed. Future release packages include the same reviewed demo images so README links work offline. No old release archive altered. Repository remains PRIVATE; staged-file/privacy checks and push complete as recorded in final handoff.

@@ -1,8 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><UseWPF>true</UseWPF><StartupObject>LeftShot.Tests.TestProgram</StartupObject></PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../src/LeftShot/LeftShot.csproj" />
-    <PackageReference Include="NUnit" Version="4.4.0" />
-    <PackageReference Include="NUnitLite" Version="4.4.0" />
-  </ItemGroup>
-</Project>

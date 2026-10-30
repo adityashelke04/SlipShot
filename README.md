@@ -1,29 +1,31 @@
-# LeftShot
+# SlipShot
+
+Previously developed under the working name LeftShot. Historical audit records and older releases retain that name; current code and builds use SlipShot.
 
 A small, local-only Windows screenshot editor. Capture a region, open the bottom-left preview, annotate, and copy or save a flattened image.
 
-**0.2.1-preview.1 — redesigned, with preview drag-and-drop; native target compatibility is pending.** Synthetic tests do not establish production readiness. LeftShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
+**0.2.2-preview.1 — redesigned, with preview drag-and-drop; native target compatibility is pending.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
 
 ## App preview
 
 The real WPF interface, rendered with generated demo content only. **No personal screenshots or desktop content are used.** [How these images were made](docs/images/README.md).
 
-![LeftShot dark editor with synthetic sample annotations](docs/images/editor-dark.png)
+![SlipShot dark editor with synthetic sample annotations](docs/images/editor-dark.png)
 
 <details>
 <summary>Light appearance</summary>
 
-![LeftShot light editor with synthetic sample annotations](docs/images/editor-light.png)
+![SlipShot light editor with synthetic sample annotations](docs/images/editor-light.png)
 
 </details>
 
-![LeftShot capture preview with synthetic content and drag actions](docs/images/preview-dark.png)
+![SlipShot capture preview with synthetic content and drag actions](docs/images/preview-dark.png)
 
 ## Run the portable preview
 
-Windows 10 version 2004 or newer / Windows 11, **x64**, with the **.NET 8 Windows Desktop Runtime**. Keep all files in the portable folder together and run `LeftShot.exe`. It starts in the notification area, without an editor or capture overlay appearing automatically. Default capture shortcut: **Ctrl+Alt+S**. The tray also provides capture, recent-image access, settings and exit. Windows may hide the tray icon in its overflow menu.
+Windows 10 version 2004 or newer / Windows 11, **x64**, with the **.NET 8 Windows Desktop Runtime**. Keep all files in the portable folder together and run `SlipShot.exe`. It starts in the notification area, without an editor or capture overlay appearing automatically. Default capture shortcut: **Ctrl+Alt+S**. The tray also provides capture, recent-image access, settings and exit. Windows may hide the tray icon in its overflow menu.
 
-Build output: `artifacts/portable/LeftShot.exe`. Organized release: `artifacts/releases/0.2.1-preview.1/win-x64/LeftShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
+Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.2-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
 
 All preferences live in `data/settings.json` beside the executable. Put the portable folder in a location you can write. There is no screenshot history or automatic saving. Choosing Save opens a dialog; deliberately dragging creates a temporary flattened PNG in `data/drag-out` beside the app. No cloud location is selected automatically. An explicitly chosen folder is the user's responsibility.
 
@@ -35,7 +37,7 @@ All preferences live in `data/settings.json` beside the executable. Put the port
 4. In the editor, use Crop, Arrow, Line, Rectangle, Ellipse, Pen, Highlight, Text, numbered Step or opaque Redact. Select objects from the canvas or Annotations panel, move them, drag a resize handle, or delete them. Text controls support content, font size and opaque color; rectangles and ellipses support fill.
 5. Ctrl+Z undoes; Ctrl+Y / Ctrl+Shift+Z redoes. Ctrl+C copies the flattened image; Ctrl+S saves. These shortcuts yield to text/combo editing. Ctrl+wheel zooms; Fit fits without enlarging past100%; 100% maps one source pixel to one physical screen pixel. Middle-drag or Space+drag pans. Arrow keys nudge a selected object; Shift nudges 10 source pixels. Editing closes through Save / Discard / Cancel.
 
-Drag handoff uses standard Windows FileDrop, Bitmap and PNG formats. A terminal may insert a file path, an agent composer may attach an image, and some targets reject drops entirely. Drag onto the image-attachment area when available. Windows may block drops into elevated apps; LeftShot does not elevate or bypass this. A path-only terminal target must keep the referenced file or save its own copy if it needs long-term access.
+Drag handoff uses standard Windows FileDrop, Bitmap and PNG formats. A terminal may insert a file path, an agent composer may attach an image, and some targets reject drops entirely. Drag onto the image-attachment area when available. Windows may block drops into elevated apps; SlipShot does not elevate or bypass this. A path-only terminal target must keep the referenced file or save its own copy if it needs long-term access.
 
 Accepted drag files survive app exit for late target reads. Owned files older than24hours are cleaned only on a later explicit drag; they are not guaranteed to disappear at24hours. Retention is capped at32files/256MiB; on capacity, use Copy or Save rather than silently evicting recent handoffs. Canceled/interrupted transfers delete their own temporary file where filesystem permissions allow. These temporary files contain only flattened exported pixels. Ordinary captures still create no file.
 
@@ -51,13 +53,13 @@ From PowerShell in this repository:
 
 ```powershell
 . ./scripts/environment.ps1
-dotnet restore LeftShot.sln --disable-parallel
-dotnet build LeftShot.sln -c Release --no-restore -m:1 -p:UseSharedCompilation=false
+dotnet restore SlipShot.sln --disable-parallel
+dotnet build SlipShot.sln -c Release --no-restore -m:1 -p:UseSharedCompilation=false
 New-Item -ItemType Directory -Force artifacts/tests | Out-Null
-dotnet run --project tests/LeftShot.Tests -c Release --no-build -- --workers=0 --work=artifacts/tests --result=TestResult.xml
-dotnet publish src/LeftShot -c Release --no-restore --self-contained false -o artifacts/sdk-portable -m:1 -p:UseSharedCompilation=false
+dotnet run --project tests/SlipShot.Tests -c Release --no-build -- --workers=0 --work=artifacts/tests --result=TestResult.xml
+dotnet publish src/SlipShot -c Release --no-restore --self-contained false -o artifacts/sdk-portable -m:1 -p:UseSharedCompilation=false
 # Only when you are ready for desktop interaction:
-./artifacts/sdk-portable/LeftShot.exe
+./artifacts/sdk-portable/SlipShot.exe
 ```
 
 The tests use NUnitLite's maintained lightweight runner, so the test command is `dotnet run` above, not an empty `dotnet test` invocation. Test fixtures are synthetic and clipboard sinks are fake. The environment script redirects NuGet, CLI-home and temporary data into this repository, disables development CLI telemetry and lowers only its own shell/child-process priority. It does not change your global environment or other processes.
@@ -71,7 +73,7 @@ The fallback uses the installed desktop runtime, a small Microsoft Roslyn compil
 python scripts/bootstrap-compiler.py
 ./scripts/build-fallback.ps1 -Test -VisualCheck
 # Only when you are ready:
-./artifacts/portable/LeftShot.exe
+./artifacts/portable/SlipShot.exe
 ```
 
 `-VisualCheck` renders synthetic editor content offscreen in software. It does not show windows, capture the desktop, register hotkeys or touch the real clipboard. Downloads and generated files remain inside this repository. The installed app has no networking code or development tool dependencies.
