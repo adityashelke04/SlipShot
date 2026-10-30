@@ -8,7 +8,7 @@ namespace LeftShot.Services;
 public sealed record AppSettings
 {
     public int Version { get; init; } = 1;
-    public string Hotkey { get; init; } = "Ctrl+F8";
+    public string Hotkey { get; init; } = "Ctrl+Alt+S";
     public string Appearance { get; init; } = "System";
     public int PreviewSeconds { get; init; } = 8;
     public bool ReducedMotion { get; init; }

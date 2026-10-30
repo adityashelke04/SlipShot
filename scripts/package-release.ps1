@@ -1,4 +1,4 @@
-param([string]$Version='0.2.0-preview.1')
+param([string]$Version='0.2.1-preview.1')
 $ErrorActionPreference='Stop'
 . "$PSScriptRoot/environment.ps1"
 if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$') { throw 'Use a simple semantic version.' }

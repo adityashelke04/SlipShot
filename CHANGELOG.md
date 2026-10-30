@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1-preview.1 — 2026-10-30
+
+Default capture shortcut is now **Ctrl+Alt+S**, with no function key. Settings accept modified letter keys as well as function keys, reject numeric enum aliases and unmodified keys, and retain native conflict detection. Existing custom settings remain user-controlled. Includes new parser/mapping regression tests.
+
 ## 0.2.0-preview.1 — 2026-10-30
 
 - Real preview drag-and-drop with PNG file, bitmap and PNG-stream payloads, click/drag threshold distinction and dismissal pause through the entire gesture.

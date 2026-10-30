@@ -25,7 +25,11 @@ public class IntegrationPolicyTests
     {Assert.That(ResourcePolicy.CanAllocate(128*1024*1024,32_000_000),Is.True);Assert.That(ResourcePolicy.CanAllocate(256*1024*1024,32_000_000),Is.False);Assert.That(ResourcePolicy.CanAllocate(0,long.MaxValue),Is.False);}
     [TestCase("Ctrl+F8",true)] [TestCase("Ctrl+Shift+F8",true)] [TestCase("Alt+F9",true)]
     [TestCase("Win+Shift+S",false)] [TestCase("PrintScreen",false)]
-    [TestCase("Ctrl+Ctrl+F8",false)] [TestCase("Ctrl+Shift+A",false)]
-    public void HotkeysUseOnlyExplicitSafeFunctionKeyCombinations(string binding,bool expected)
+    [TestCase("Ctrl+Ctrl+F8",false)] [TestCase("Ctrl+Shift+A",true)]
+    [TestCase("Ctrl+Alt+S",true)] [TestCase("ctrl+alt+s",true)]
+    [TestCase("Ctrl+Alt+62",false)] [TestCase("Ctrl+Alt+Return",false)] [TestCase("S",false)]
+    public void HotkeysAcceptModifiedLettersAndFunctionKeysWithoutReservedBindings(string binding,bool expected)
     {Assert.That(Hotkeys.TryParse(binding,out _,out _),Is.EqualTo(expected));}
+    [Test] public void ScreenshotLetterBindingMapsToControlAltAndVirtualS()
+    {Assert.That(Hotkeys.TryParse("Ctrl+Alt+S",out uint modifiers,out uint key),Is.True);Assert.That(modifiers,Is.EqualTo(3));Assert.That(key,Is.EqualTo(0x53));}
 }

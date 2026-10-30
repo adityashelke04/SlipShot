@@ -202,7 +202,7 @@ internal sealed class AppController : IDisposable
         preferences=new SettingsWindow(settings,changed=>
         {
             bool changedBinding=changed.Hotkey!=settings.Hotkey;
-            if(changedBinding&&hotkeys?.Register(changed.Hotkey)!=true)return "That hotkey is already in use. Try Ctrl+Shift+F9; tray capture remains available.";
+            if(changedBinding&&hotkeys?.Register(changed.Hotkey)!=true)return "That hotkey is already in use. Try Ctrl+Alt+Q; tray capture remains available.";
             try {store.Save(changed);}
             catch(Exception ex) when(IsExpected(ex)) {if(changedBinding)hotkeys?.Register(settings.Hotkey);return "Preferences could not be written beside the app. Choose a writable portable folder.";}
             settings=changed;Theme.Configure(settings.Appearance,settings.ReducedMotion);if(tray is not null)tray.Text="LeftShot · "+settings.Hotkey;return null;

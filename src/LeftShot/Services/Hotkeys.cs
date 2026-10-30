@@ -38,7 +38,11 @@ internal sealed class Hotkeys : IDisposable
             if(modifier==0) return false;
             modifiers |= modifier;
         }
-        if(!Enum.TryParse<Key>(parts[^1],true,out var parsed) || parsed < Key.F1 || parsed > Key.F24) return false;
+        string keyName=parts[^1];
+        if(!Enum.TryParse<Key>(keyName,true,out var parsed))return false;
+        bool letter=keyName.Length==1 && parsed>=Key.A && parsed<=Key.Z && char.IsAsciiLetter(keyName[0]);
+        bool function=keyName.StartsWith("F",StringComparison.OrdinalIgnoreCase) && parsed>=Key.F1 && parsed<=Key.F24;
+        if(!letter&&!function)return false;
         key=(uint)KeyInterop.VirtualKeyFromKey(parsed);
         return true;
     }

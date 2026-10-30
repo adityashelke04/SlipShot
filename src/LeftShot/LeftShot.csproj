@@ -6,7 +6,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <StartupObject>LeftShot.Program</StartupObject>
     <AssemblyName>LeftShot</AssemblyName>
-    <Version>0.2.0-preview.1</Version>
+    <Version>0.2.1-preview.1</Version>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 </Project>

@@ -21,7 +21,7 @@ internal sealed class SettingsWindow : Window
         TextBox Field(string name,string value)
         { var label=Theme.Text(name);label.Margin=new Thickness(0,16,0,6);body.Children.Add(label);var box=new TextBox {Text=value};AutomationProperties.SetName(box,name);body.Children.Add(box);return box; }
         var hotkey=Field("Capture hotkey",initial.Hotkey);
-        body.Children.Add(Theme.Text("Use Ctrl / Shift / Alt + F1–F24. Existing bindings are never replaced.",12,true));
+        body.Children.Add(Theme.Text("Use Ctrl / Shift / Alt + a letter. Function keys also work. Existing bindings are never replaced.",12,true));
         var appearanceLabel=Theme.Text("Appearance");appearanceLabel.Margin=new Thickness(0,16,0,0);body.Children.Add(appearanceLabel);
         var appearance=new ComboBox {ItemsSource=new[]{"System","Light","Dark"},SelectedItem=initial.Appearance,MinHeight=34,Margin=new Thickness(0,6,0,8)};AutomationProperties.SetName(appearance,"Appearance");body.Children.Add(appearance);
         var timeout=Field("Preview duration (2–60 seconds)",initial.PreviewSeconds.ToString());
@@ -34,7 +34,7 @@ internal sealed class SettingsWindow : Window
         var error=Theme.Text("",13);error.Margin=new Thickness(0,8,0,8);AutomationProperties.SetLiveSetting(error,AutomationLiveSetting.Polite);footer.Children.Add(error);
         footer.Children.Add(Theme.Button("Save settings",()=>
         {
-            if(!Hotkeys.TryParse(hotkey.Text,out _,out _)) {error.Text="Choose modifiers plus a function key, for example Ctrl+Shift+F9.";return;}
+            if(!Hotkeys.TryParse(hotkey.Text,out _,out _)) {error.Text="Choose modifiers plus a letter, for example Ctrl+Alt+S.";return;}
             if(!int.TryParse(timeout.Text,out int seconds)||seconds<2||seconds>60) {error.Text="Preview duration must be 2–60 seconds.";return;}
             if(!int.TryParse(quality.Text,out int jpeg)||jpeg<1||jpeg>100) {error.Text="JPEG quality must be 1–100.";return;}
             if(background.Text.Length!=7 || background.Text[0]!='#' || !int.TryParse(background.Text.AsSpan(1),System.Globalization.NumberStyles.HexNumber,null,out _)) {error.Text="Choose an opaque background as #RRGGBB.";return;}

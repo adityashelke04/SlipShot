@@ -1,5 +1,9 @@
 # Progress
 
+## Latest shortcut update: 0.2.1-preview.1
+
+User rejected function keys. Default is now Ctrl+Alt+S; modified letters supported in parser/settings UI alongside legacy function keys. Parser rejects numeric aliases, unmodified letters and reserved unsupported bindings. Observed test-first failure of four letter cases, then full suite87passed/0failed, native PE/static scan passed. New immutable local release artifacts/releases/0.2.1-preview.1/win-x64/LeftShot.exe; use this for the next launch. No app was running during this change, and actual native registration remains untested until launch. Earlier releases remain unchanged; preview0.2.0 local settings still contain the prior Ctrl+F8 preference. Current source/default and new release use Ctrl+Alt+S. No automatic startup or launch performed.
+
 ## Current: 0.2.0-preview.1
 
 User requested drag-and-drop plus full UI redesign, then authorized creating private GitHub repo. Created https://github.com/adityashelke04/LeftShot (PRIVATE), origin/master tracks correctly; ordinary pushes verified. Source change3ea28fc pushed. Publishing preflight in scripts/check-publish.ps1.
