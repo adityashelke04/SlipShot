@@ -23,7 +23,7 @@ public class IntegrationPolicyTests
     [Test]
     public void BudgetAccountsForTransientCaptureBuffers()
     {Assert.That(ResourcePolicy.CanAllocate(128*1024*1024,32_000_000),Is.True);Assert.That(ResourcePolicy.CanAllocate(256*1024*1024,32_000_000),Is.False);Assert.That(ResourcePolicy.CanAllocate(0,long.MaxValue),Is.False);}
-    [TestCase("Ctrl+Shift+F8",true)] [TestCase("Alt+F9",true)]
+    [TestCase("Ctrl+F8",true)] [TestCase("Ctrl+Shift+F8",true)] [TestCase("Alt+F9",true)]
     [TestCase("Win+Shift+S",false)] [TestCase("PrintScreen",false)]
     [TestCase("Ctrl+Ctrl+F8",false)] [TestCase("Ctrl+Shift+A",false)]
     public void HotkeysUseOnlyExplicitSafeFunctionKeyCombinations(string binding,bool expected)
