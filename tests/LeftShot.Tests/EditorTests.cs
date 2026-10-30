@@ -44,6 +44,20 @@ public sealed class EditorTests
         Assert.That(result, Is.EqualTo(new Rect(10, 20, 60, 30)));
     }
 
+    [TestCase(1, 1, 1)]
+    [TestCase(1, 1.25, 0.8)]
+    [TestCase(1, 1.5, 2.0 / 3)]
+    [TestCase(1, 2, 0.5)]
+    [TestCase(0.001, 2, 0.01)]
+    [TestCase(16, 1.25, 6.4)]
+    public void Physical_pixel_zoom_converts_monitor_scale_and_clamps_in_physical_pixels(double physicalZoom, double dpiScale, double expectedDipZoom)
+    {
+        double result = (double)typeof(EditorWindow)
+            .GetMethod("DipZoom", BindingFlags.NonPublic | BindingFlags.Static)!
+            .Invoke(null, new object[] { physicalZoom, dpiScale })!;
+        Assert.That(result, Is.EqualTo(expectedDipZoom).Within(0.000001));
+    }
+
     [Test, Apartment(ApartmentState.STA)]
     public void View_model_reports_history_changes_and_disables_undo_while_busy()
     {

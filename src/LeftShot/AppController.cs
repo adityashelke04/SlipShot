@@ -21,6 +21,7 @@ internal sealed class AppController : IDisposable
     private readonly Application app;
     private readonly SettingsStore store=new(Path.Combine(AppContext.BaseDirectory,"data","settings.json"));
     private readonly IDesktopCapture capture=new DesktopCapture();
+    private readonly DragTransferStore dragTransfers=new(Path.Combine(AppContext.BaseDirectory,"data","drag-out"));
     private readonly PreviewQueue<Captured> queue=new();
     private readonly List<EditorWindow> editors=new();
     private readonly List<PinWindow> pins=new();
@@ -59,7 +60,7 @@ internal sealed class AppController : IDisposable
         tray.DoubleClick+=(_,_)=>Dispatch(()=>_ = CaptureRegionAsync());
         hotkeys=new Hotkeys();hotkeys.Invoked+=()=>_ = CaptureRegionAsync();
         if(!hotkeys.Register(settings.Hotkey)) Notify("Capture hotkey is unavailable. Use the tray menu and choose another binding in Settings.");
-        else Notify("Ready · "+settings.Hotkey+" captures a region. Screenshots stay in memory until you save.");
+        else Notify("Ready · "+settings.Hotkey+" captures a region. Screenshots stay in memory until you save or deliberately drag them.");
         if(store.LoadWarning is not null) Notify(store.LoadWarning);
         SystemEvents.DisplaySettingsChanged+=DisplaysChanged;
         SystemEvents.UserPreferenceChanged+=PreferencesChanged;
@@ -67,7 +68,7 @@ internal sealed class AppController : IDisposable
 
     private async Task CaptureRegionAsync()
     {
-        if(disposed||exitRequested||!captureGate.TryBegin(out long generation)) return;
+        if(disposed||exitRequested||preview?.IsDragging==true||!captureGate.TryBegin(out long generation)) return;
         var hidden=new List<Window>();
         Task<BitmapSource>? pending=null;
         using var cancel=CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
@@ -126,19 +127,28 @@ internal sealed class AppController : IDisposable
         if(disposed||exitRequested||preview is not null||queue.Current is not Captured shot)return;
         preview=new PreviewWindow(shot.Image,shot.Monitor,settings.PreviewSeconds,
             ()=>OpenEditor(shot),()=>_ = PreviewCopyAsync(shot.Image),
-            ()=>_ = SaveAsync(new EditDocument(shot.Image)),()=> {try {Pin(shot.Image);}catch(InvalidOperationException ex){Notify(ex.Message);} });
+            ()=>_ = SaveAsync(new EditDocument(shot.Image)),()=> {try {Pin(shot.Image);}catch(InvalidOperationException ex){Notify(ex.Message);} },DragImage);
         preview.Closed+=(_,_)=> {preview=null;if(!suppressAdvance) {queue.Dismiss();ShowPreview();}};
         preview.Show();
     }
     private void ReopenPreview()
     {
+        if(preview?.IsDragging==true)return;
         if(latest is null){Notify("No capture retained. Choose Capture region to begin.");return;}
         try {latest=latest with {Monitor=Native.RefreshMonitor(latest.Monitor)};}
         catch(Exception ex) when(IsExpected(ex)){Notify("No display is available for the preview. The image remains available through Edit latest capture.");return;}
         suppressAdvance=true;preview?.Close();suppressAdvance=false;queue.Clear();queue.Push(latest);ShowPreview();
     }
     private void Forget()
-    {suppressAdvance=true;preview?.Close();suppressAdvance=false;queue.Clear();latest=null;Notify("Preview memory released. Open editors and pinned references remain available.");}
+    {if(preview?.IsDragging==true)return;suppressAdvance=true;preview?.Close();suppressAdvance=false;queue.Clear();latest=null;Notify("Preview memory released. Open editors and pinned references remain available.");}
+
+    private void DragImage(DependencyObject source,BitmapSource image)
+    {
+        if(!ResourcePolicy.CanAllocate(RetainedBytes(),(long)image.PixelWidth*image.PixelHeight,4))throw new InvalidOperationException("Close another editor or reference before dragging this image.");
+        using var transfer=dragTransfers.Prepare(DocumentRenderer.Render(new EditDocument(image)));
+        var effect=DragDrop.DoDragDrop(source,transfer.Data,DragDropEffects.Copy);
+        transfer.Complete((effect&DragDropEffects.Copy)!=0);
+    }
 
     private void OpenEditor(Captured shot)
     {
@@ -202,6 +212,7 @@ internal sealed class AppController : IDisposable
     private void TryExit()
     {
         if(disposed)return;
+        if(preview?.IsDragging==true){Notify("Finish or cancel the drag before exiting LeftShot.");return;}
         exitRequested=true;
         if(editors.Count>0)
         {

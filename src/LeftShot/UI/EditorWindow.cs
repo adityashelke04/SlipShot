@@ -28,6 +28,9 @@ public sealed class EditorWindow : Window
     private readonly ListBox _layers = new();
     private readonly TextBlock _status = Theme.Text("", 12, true);
     private readonly TextBlock _zoomLabel = Theme.Text("100%", 12);
+    private readonly TextBlock _dimensions = Theme.Text("", 11, true);
+    private readonly TextBlock _contextHint = Theme.Text("", 12, true);
+    private readonly TextBlock _contextTitle = Theme.Text("Select", 12);
     private readonly TextBlock _layerHint = Theme.Text("Draw on the image to add an annotation.", 12, true);
     private readonly Dictionary<ToolKind, Button> _toolButtons = new();
     private readonly List<Button> _colorButtons = new();
@@ -37,6 +40,8 @@ public sealed class EditorWindow : Window
     private readonly TextBox _hex = new() { Width = 82, MaxLength = 7, ToolTip = "Opaque color as #RRGGBB" };
     private readonly TextBox _text = new() { Text = "Text", MinWidth = 130, Width = 200, MaxLength = 4000, ToolTip = "Text content. Press Enter or Apply text to update the selected text." };
     private readonly WrapPanel _textOptions = new();
+    private readonly StackPanel _colorOptions = new() { Orientation = Orientation.Horizontal };
+    private readonly StackPanel _strokeOptions = new() { Orientation = Orientation.Horizontal };
     private readonly Button _undo;
     private readonly Button _redo;
     private readonly Button _saveButton;
@@ -44,9 +49,10 @@ public sealed class EditorWindow : Window
     private readonly Button _pinButton;
     private readonly Button _deleteButton;
     private readonly Button _resetCrop;
-    private readonly ColumnDefinition _layerColumn = new() { Width = new GridLength(190) };
+    private readonly Button _layerButton;
+    private readonly ColumnDefinition _layerColumn = new() { Width = new GridLength(0) };
     private readonly Border _sidebarBorder;
-    private bool? _showLayers;
+    private bool _showLayers;
     private ToolKind _tool { get => _viewModel.SelectedTool; set => _viewModel.SelectedTool = value; }
     private Color _color = Color.FromRgb(230, 67, 64);
     private double _strokeWidth = 4;
@@ -87,88 +93,172 @@ public sealed class EditorWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Theme.Apply(this);
 
-        _surface = new DrawingSurface(this) { Focusable = true, Margin = new Thickness(24) };
+        _surface = new DrawingSurface(this) { Focusable = true, SnapsToDevicePixels = true };
         AutomationProperties.SetName(_surface, "Screenshot editing canvas");
         _scroll = new ScrollViewer
         {
-            Content = _surface,
+            Content = new Border { Child = _surface, Margin = new Thickness(20), BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(1) },
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
-            Background = Theme.BackgroundBrush,
             Focusable = false
         };
+        _scroll.SetResourceReference(BackgroundProperty, "Canvas");
 
         var root = new DockPanel { LastChildFill = true };
-        var chrome = new StackPanel { Background = Theme.PanelBrush };
-        DockPanel.SetDock(chrome, Dock.Top);
-        root.Children.Add(chrome);
-
-        var actions = new WrapPanel { Margin = new Thickness(12, 8, 12, 4) };
-        _undo = AddButton(actions, "Undo", () => { CancelGesture(); _document.Undo(); }, "Undo (Ctrl+Z)");
-        _redo = AddButton(actions, "Redo", () => { CancelGesture(); _document.Redo(); }, "Redo (Ctrl+Y)");
+        var header = new Grid { Margin = new Thickness(16, 10, 16, 10) };
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var identity = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        var documentIdentity = new StackPanel { MinWidth = 86, Margin = new Thickness(0, 0, 12, 0) };
+        var wordmark = Theme.Text("LeftShot", 15);
+        wordmark.FontWeight = FontWeights.SemiBold;
+        documentIdentity.Children.Add(wordmark);
+        _dimensions.TextWrapping = TextWrapping.NoWrap;
+        _dimensions.Margin = new Thickness(0, 2, 0, 0);
+        documentIdentity.Children.Add(_dimensions);
+        identity.Children.Add(documentIdentity);
+        _undo = Theme.IconButton("Undo (Ctrl+Z)", "M 6,4 L 2,8 L 6,12 M 2,8 L 10,8 C 15,8 15,15 10,15", () => { CancelGesture(); _document.Undo(); }, size: 32);
+        _redo = Theme.IconButton("Redo (Ctrl+Y)", "M 10,4 L 14,8 L 10,12 M 14,8 L 6,8 C 1,8 1,15 6,15", () => { CancelGesture(); _document.Redo(); }, size: 32);
+        _undo.Margin = _redo.Margin = new Thickness(0);
+        identity.Children.Add(_undo);
+        identity.Children.Add(_redo);
         _undo.SetBinding(IsEnabledProperty, new System.Windows.Data.Binding(nameof(DocumentViewModel.CanUndo)));
         _redo.SetBinding(IsEnabledProperty, new System.Windows.Data.Binding(nameof(DocumentViewModel.CanRedo)));
-        AddGap(actions);
-        _copyButton = AddButton(actions, "Copy", () => _ = CopyAsync(), "Copy flattened image (Ctrl+C)");
-        _saveButton = AddButton(actions, "Save…", () => _ = SaveAsync(), "Save flattened image (Ctrl+S)", true);
-        _pinButton = AddButton(actions, "Pin", Pin, "Pin a flattened copy above other windows");
-        AddGap(actions);
-        AddButton(actions, "Zoom out", () => SetZoom(_zoom / 1.25), "Zoom out (Ctrl+−)");
-        _zoomLabel.VerticalAlignment = VerticalAlignment.Center;
-        _zoomLabel.Margin = new Thickness(6, 0, 10, 0);
-        actions.Children.Add(_zoomLabel);
-        AddButton(actions, "Zoom in", () => SetZoom(_zoom * 1.25), "Zoom in (Ctrl++)");
-        AddButton(actions, "Fit", FitImage, "Fit image to the available canvas (Ctrl+0)");
-        AddButton(actions, "100%", () => SetZoom(1), "Show image at 100% zoom (Ctrl+1)");
-        AddButton(actions, "Annotations", () => { _showLayers = _layerColumn.Width.Value == 0; UpdateLayerVisibility(); }, "Show or hide the annotation list");
-        chrome.Children.Add(actions);
+        header.Children.Add(identity);
 
-        var tools = new WrapPanel { Margin = new Thickness(12, 0, 12, 4) };
+        var zoomControls = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 8, 0) };
+        var zoomOut = Theme.IconButton("Zoom out (Ctrl+minus)", "M 3,8 L 13,8", () => SetZoom(_zoom / 1.25), size: 28);
+        zoomOut.Margin = new Thickness(0);
+        zoomControls.Children.Add(zoomOut);
+        _zoomLabel.VerticalAlignment = VerticalAlignment.Center;
+        _zoomLabel.Width = 44;
+        _zoomLabel.TextAlignment = TextAlignment.Center;
+        _zoomLabel.TextWrapping = TextWrapping.NoWrap;
+        _zoomLabel.ToolTip = "Image pixels relative to screen pixels";
+        zoomControls.Children.Add(_zoomLabel);
+        var zoomIn = Theme.IconButton("Zoom in (Ctrl+plus)", "M 3,8 L 13,8 M 8,3 L 8,13", () => SetZoom(_zoom * 1.25), size: 28);
+        zoomIn.Margin = new Thickness(0, 0, 6, 0);
+        zoomControls.Children.Add(zoomIn);
+        var fitButton = AddButton(zoomControls, "Fit", FitImage, "Fit image to the canvas (Ctrl+0)");
+        var actualSizeButton = AddButton(zoomControls, "100%", ActualSize, "One image pixel per screen pixel (Ctrl+1)");
+        foreach (var button in new[] { fitButton, actualSizeButton })
+        {
+            button.Padding = new Thickness(8, 4, 8, 4);
+            button.MinHeight = 30;
+            button.FontSize = 12;
+            button.Margin = new Thickness(0);
+            button.BorderThickness = new Thickness(0);
+            button.Background = Brushes.Transparent;
+        }
+        Grid.SetColumn(zoomControls, 1);
+        header.Children.Add(zoomControls);
+        var exports = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+        _copyButton = AddButton(exports, "Copy", () => _ = CopyAsync(), "Copy flattened image (Ctrl+C)");
+        _saveButton = AddButton(exports, "Save…", () => _ = SaveAsync(), "Save flattened image (Ctrl+S)", true);
+        _copyButton.Padding = _saveButton.Padding = new Thickness(14, 7, 14, 7);
+        _copyButton.Margin = new Thickness(0, 0, 6, 0);
+        _saveButton.Margin = new Thickness(0);
+        Grid.SetColumn(exports, 2);
+        header.Children.Add(exports);
+        var headerBorder = new Border { Child = header, Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 0, 0, 1) };
+        DockPanel.SetDock(headerBorder, Dock.Top);
+        root.Children.Add(headerBorder);
+
+        var statusBorder = new Border { Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 1, 0, 0), Padding = new Thickness(16, 7, 16, 7) };
+        _status.TextTrimming = TextTrimming.CharacterEllipsis;
+        _status.TextWrapping = TextWrapping.NoWrap;
+        statusBorder.Child = _status;
+        DockPanel.SetDock(statusBorder, Dock.Bottom);
+        root.Children.Add(statusBorder);
+
+        var rail = new DockPanel { LastChildFill = true, Width = 112, Margin = new Thickness(6, 8, 6, 8) };
+        var railFooter = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 8, 0, 0) };
+        _pinButton = Theme.IconButton("Pin a flattened copy above other windows", "M 5,2 L 11,2 M 6,2 L 6,7 L 3,10 L 13,10 L 10,7 L 10,2 M 8,10 L 8,15", Pin);
+        _layerButton = Theme.IconButton("Show annotations", "M 2,5 L 8,2 L 14,5 L 8,8 Z M 2,8 L 8,11 L 14,8 M 2,11 L 8,14 L 14,11", () => { _showLayers = !_showLayers; UpdateLayerVisibility(); });
+        _pinButton.Margin = new Thickness(0, 0, 8, 0);
+        _layerButton.Margin = new Thickness(0);
+        railFooter.Children.Add(_pinButton);
+        railFooter.Children.Add(_layerButton);
+        DockPanel.SetDock(railFooter, Dock.Bottom);
+        rail.Children.Add(railFooter);
+        var tools = new WrapPanel { Width = 112 };
         foreach (var item in new (ToolKind Kind, string Label, string Key)[]
         {
             (ToolKind.Select, "Select", "V"), (ToolKind.Crop, "Crop", "C"),
             (ToolKind.Arrow, "Arrow", "A"), (ToolKind.Line, "Line", "L"),
-            (ToolKind.Rectangle, "Rectangle", "R"), (ToolKind.Ellipse, "Ellipse", "E"),
-            (ToolKind.Pen, "Pen", "P"), (ToolKind.Highlighter, "Highlight", "H"),
+            (ToolKind.Rectangle, "Box", "R"), (ToolKind.Ellipse, "Ellipse", "E"),
+            (ToolKind.Pen, "Pen", "P"), (ToolKind.Highlighter, "Marker", "H"),
             (ToolKind.Text, "Text", "T"), (ToolKind.Step, "Step", "N"),
             (ToolKind.Redaction, "Redact", "B"), (ToolKind.Pan, "Pan", "Space / hand tool")
         })
         {
             ToolKind kind = item.Kind;
             var button = AddButton(tools, item.Label, () => ChooseTool(kind), $"{item.Label} ({item.Key})");
-            var content = new StackPanel { Orientation = Orientation.Horizontal };
-            content.Children.Add(new ToolIcon(kind) { Width = 16, Height = 16, Margin = new Thickness(0, 0, 6, 0), IsHitTestVisible = false });
-            content.Children.Add(Theme.Text(item.Label));
+            button.Width = 54;
+            button.Height = 46;
+            button.Padding = new Thickness(2, 4, 2, 3);
+            button.Margin = new Thickness(1, 0, 1, 2);
+            button.BorderThickness = new Thickness(1);
+            button.BorderBrush = Brushes.Transparent;
+            button.Background = Brushes.Transparent;
+            var content = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            content.Children.Add(new ToolIcon(kind) { Width = 16, Height = 16, Margin = new Thickness(0, 0, 0, 4), IsHitTestVisible = false });
+            var label = Theme.Text(item.Label, 11);
+            label.TextWrapping = TextWrapping.NoWrap;
+            label.HorizontalAlignment = HorizontalAlignment.Center;
+            content.Children.Add(label);
             button.Content = content;
             _toolButtons.Add(kind, button);
         }
-        chrome.Children.Add(tools);
+        rail.Children.Add(new ScrollViewer { Content = tools, VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Focusable = false });
+        var railBorder = new Border { Child = rail, Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 0, 1, 0) };
+        DockPanel.SetDock(railBorder, Dock.Left);
+        root.Children.Add(railBorder);
 
-        var properties = new WrapPanel { Margin = new Thickness(12, 2, 12, 8) };
-        AddLabel(properties, "Color");
+        var workspace = new Grid();
+        workspace.ColumnDefinitions.Add(new ColumnDefinition());
+        workspace.ColumnDefinitions.Add(_layerColumn);
+        var imageArea = new DockPanel();
+        var properties = new WrapPanel { Margin = new Thickness(12, 5, 12, 5), MinHeight = 32, VerticalAlignment = VerticalAlignment.Center };
+        _contextTitle.FontWeight = FontWeights.SemiBold;
+        _contextTitle.VerticalAlignment = VerticalAlignment.Center;
+        _contextTitle.Margin = new Thickness(0, 0, 12, 0);
+        properties.Children.Add(_contextTitle);
+        _contextHint.VerticalAlignment = VerticalAlignment.Center;
+        _contextHint.TextWrapping = TextWrapping.NoWrap;
+        _contextHint.TextTrimming = TextTrimming.CharacterEllipsis;
+        properties.Children.Add(_contextHint);
         foreach (var swatch in new[] { "#E64340", "#F2AD32", "#F5E663", "#2C9D72", "#378FE7", "#FFFFFF", "#111111" })
         {
             var color = (Color)ColorConverter.ConvertFromString(swatch);
             var button = Theme.Button("", () => SetColor(color));
-            button.Width = 28;
-            button.Height = 28;
+            button.Width = 22;
+            button.Height = 30;
+            button.MinHeight = 30;
             button.MinWidth = 0;
-            button.Padding = new Thickness(4);
-            button.Margin = new Thickness(0, 2, 4, 2);
+            button.Padding = new Thickness(2);
+            button.Margin = new Thickness(0, 1, 1, 1);
+            button.Background = Brushes.Transparent;
+            button.BorderBrush = Brushes.Transparent;
             button.ToolTip = "Use " + swatch;
             button.Tag = color;
             button.Content = new Border { Background = new SolidColorBrush(color), BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(1), Width = 16, Height = 16, CornerRadius = new CornerRadius(3) };
             AutomationProperties.SetName(button, "Color " + swatch);
             _colorButtons.Add(button);
-            properties.Children.Add(button);
+            _colorOptions.Children.Add(button);
         }
         StyleInput(_hex, "Hex color");
         _hex.KeyDown += (_, e) => { if (e.Key == Key.Enter) { ApplyHex(); e.Handled = true; } };
         _hex.LostKeyboardFocus += (_, _) => ApplyHex();
-        properties.Children.Add(_hex);
-        AddLabel(properties, "Stroke");
+        _hex.Width = 78;
+        _hex.FontSize = 12;
+        _hex.Margin = new Thickness(4, 1, 8, 1);
+        _colorOptions.Children.Add(_hex);
+        properties.Children.Add(_colorOptions);
+        AddLabel(_strokeOptions, "Stroke");
         SetupCombo(_stroke, new double[] { 1, 2, 4, 6, 8, 12, 20, 32 }, 4, "Stroke width in image pixels");
         _stroke.SelectionChanged += (_, _) =>
         {
@@ -176,7 +266,8 @@ public sealed class EditorWindow : Window
             _strokeWidth = width;
             ChangeSelected(a => a with { StrokeWidth = width }, a => a.Kind is not (ToolKind.Text or ToolKind.Redaction or ToolKind.Step));
         };
-        properties.Children.Add(_stroke);
+        _strokeOptions.Children.Add(_stroke);
+        properties.Children.Add(_strokeOptions);
         _fill.Foreground = Theme.TextBrush;
         _fill.Checked += (_, _) => ApplyFill();
         _fill.Unchecked += (_, _) => ApplyFill();
@@ -194,34 +285,29 @@ public sealed class EditorWindow : Window
         StyleInput(_text, "Annotation text");
         _text.KeyDown += (_, e) => { if (e.Key == Key.Enter) { ApplyText(); e.Handled = true; } };
         _textOptions.Children.Add(_text);
-        AddButton(_textOptions, "Apply text", ApplyText, "Update the selected text, or use this text for the next placement");
+        _text.Width = 140;
+        var applyText = Theme.IconButton("Apply text to the selected annotation", "M 3,8 L 6,11 L 13,4", ApplyText, size: 32);
+        applyText.Margin = new Thickness(0);
+        _textOptions.Children.Add(applyText);
         properties.Children.Add(_textOptions);
-        chrome.Children.Add(properties);
-        chrome.Children.Add(new Border { Height = 1, Background = Theme.BorderBrush });
-
-        var statusBorder = new Border { Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 1, 0, 0), Padding = new Thickness(16, 8, 16, 8) };
-        _status.TextTrimming = TextTrimming.CharacterEllipsis;
-        statusBorder.Child = _status;
-        DockPanel.SetDock(statusBorder, Dock.Bottom);
-        root.Children.Add(statusBorder);
-
-        var workspace = new Grid();
-        workspace.ColumnDefinitions.Add(new ColumnDefinition());
-        workspace.ColumnDefinitions.Add(_layerColumn);
-        workspace.Children.Add(_scroll);
+        _deleteButton = Theme.IconButton("Delete selected annotation (Delete)", "M 3,4 L 13,4 M 6,4 L 6,2 L 10,2 L 10,4 M 5,6 L 5,13 L 11,13 L 11,6 M 7,7 L 7,11 M 9,7 L 9,11", DeleteSelected, size: 32);
+        _deleteButton.Margin = new Thickness(8, 0, 0, 0);
+        properties.Children.Add(_deleteButton);
+        _resetCrop = AddButton(properties, "Reset crop", () => { CancelGesture(); Commit(new DocumentState(ImageBounds, _document.State.Annotations)); }, "Restore the full image bounds");
+        _resetCrop.Padding = new Thickness(10, 4, 10, 4);
+        var propertyBorder = new Border { Child = properties, Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 0, 0, 1) };
+        DockPanel.SetDock(propertyBorder, Dock.Top);
+        imageArea.Children.Add(propertyBorder);
+        imageArea.Children.Add(_scroll);
+        workspace.Children.Add(imageArea);
         var sidebar = new DockPanel { LastChildFill = true, Margin = new Thickness(12) };
         var layerHeading = Theme.Text("Annotations", 16);
-        layerHeading.Margin = new Thickness(0, 0, 0, 12);
+        layerHeading.FontSize = 13;
+        layerHeading.FontWeight = FontWeights.SemiBold;
+        layerHeading.Margin = new Thickness(0, 4, 0, 16);
         DockPanel.SetDock(layerHeading, Dock.Top);
         sidebar.Children.Add(layerHeading);
         var layerActions = new StackPanel();
-        _deleteButton = Theme.Button("Delete selected", DeleteSelected);
-        _deleteButton.Margin = new Thickness(0, 8, 0, 4);
-        _deleteButton.ToolTip = "Delete selected annotation (Delete)";
-        layerActions.Children.Add(_deleteButton);
-        _resetCrop = Theme.Button("Reset crop", () => { CancelGesture(); Commit(new DocumentState(ImageBounds, _document.State.Annotations)); });
-        _resetCrop.Margin = new Thickness(0, 4, 0, 8);
-        layerActions.Children.Add(_resetCrop);
         var hint = Theme.Text("Select to move. Drag a handle to resize. Arrow keys nudge; Shift moves 10 px. Hold Space to pan.", 12, true);
         hint.TextWrapping = TextWrapping.Wrap;
         layerActions.Children.Add(hint);
@@ -252,8 +338,7 @@ public sealed class EditorWindow : Window
         workspace.Children.Add(_sidebarBorder);
         root.Children.Add(workspace);
         Content = root;
-        root.SizeChanged += (_, _) => UpdateLayerVisibility(root.ActualWidth);
-        UpdateLayerVisibility(Width);
+        UpdateLayerVisibility();
 
         _surface.MouseDown += OnMouseDown;
         _surface.MouseMove += OnMouseMove;
@@ -271,6 +356,11 @@ public sealed class EditorWindow : Window
         Closing += OnClosing;
         Closed += (_, _) => { CancelGesture(); _document.Changed -= DocumentChanged; _viewModel.Dispose(); };
         Loaded += (_, _) => { FitImage(); Theme.AnimateEntrance(this); _surface.Focus(); };
+        DpiChanged += (_, e) =>
+        {
+            if (_fit) FitImage();
+            else SetZoom(_zoom * e.OldDpi.DpiScaleX / e.NewDpi.DpiScaleX);
+        };
         DocumentChanged();
     }
 
@@ -279,11 +369,13 @@ public sealed class EditorWindow : Window
     private DocumentState VisibleState => _preview ?? _document.State;
     public bool ClosePending => _allowClose || _closing;
 
-    private void UpdateLayerVisibility(double? width = null)
+    private void UpdateLayerVisibility()
     {
-        bool show = _showLayers ?? (width ?? ActualWidth) >= 1000;
-        _layerColumn.Width = new GridLength(show ? 190 : 0);
-        _sidebarBorder.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        _layerColumn.Width = new GridLength(_showLayers ? 190 : 0);
+        _sidebarBorder.Visibility = _showLayers ? Visibility.Visible : Visibility.Collapsed;
+        _layerButton.SetResourceReference(Control.BackgroundProperty, _showLayers ? "Selected" : "Panel");
+        _layerButton.ToolTip = _showLayers ? "Hide annotations" : "Show annotations";
+        AutomationProperties.SetName(_layerButton, _showLayers ? "Hide annotations" : "Show annotations");
     }
 
     private static Button AddButton(Panel parent, string text, Action action, string tip, bool primary = false)
@@ -296,7 +388,6 @@ public sealed class EditorWindow : Window
         return button;
     }
 
-    private static void AddGap(Panel parent) => parent.Children.Add(new Border { Width = 14 });
     private static void AddLabel(Panel parent, string label)
     {
         var text = Theme.Text(label, 12, true);
@@ -343,6 +434,8 @@ public sealed class EditorWindow : Window
     {
         if (_selectedId is not null && Selected is null) _selectedId = null;
         _resetCrop.IsEnabled = !_busy && _document.State.Crop != ImageBounds;
+        var crop = _document.State.Crop;
+        _dimensions.Text = $"{crop.Width:0} × {crop.Height:0} px";
         RefreshLayers();
         RefreshProperties();
         if (_fit) FitImage(); else ResizeSurface();
@@ -395,21 +488,41 @@ public sealed class EditorWindow : Window
         if (!_font.Items.Contains(_fontSize)) _font.ItemsSource = new double[] { 12, 16, 20, 24, 32, 40, 48, 64, 96, _fontSize }.Distinct().OrderBy(size => size).ToArray();
         _font.SelectedItem = _fontSize;
         var kind = selected?.Kind ?? _tool;
+        bool canColor = kind is not (ToolKind.Select or ToolKind.Crop or ToolKind.Pan or ToolKind.Redaction);
+        bool canStroke = kind is ToolKind.Arrow or ToolKind.Line or ToolKind.Rectangle or ToolKind.Ellipse or ToolKind.Pen or ToolKind.Highlighter;
+        _colorOptions.Visibility = canColor ? Visibility.Visible : Visibility.Collapsed;
+        _strokeOptions.Visibility = canStroke ? Visibility.Visible : Visibility.Collapsed;
+        _fill.Visibility = kind is ToolKind.Rectangle or ToolKind.Ellipse ? Visibility.Visible : Visibility.Collapsed;
+        _contextTitle.Visibility = canColor ? Visibility.Collapsed : Visibility.Visible;
+        _contextTitle.Text = kind == ToolKind.Redaction ? "Redact" : kind.ToString();
+        _contextHint.Visibility = canColor || selected is not null ? Visibility.Collapsed : Visibility.Visible;
+        _contextHint.Text = kind switch
+        {
+            ToolKind.Select => "Click an annotation to adjust it",
+            ToolKind.Crop => "Drag to crop · Esc cancels",
+            ToolKind.Pan => "Drag to move around the image",
+            ToolKind.Redaction => "Draw an opaque block",
+            _ => ""
+        };
         _fill.IsEnabled = !_busy && kind is ToolKind.Rectangle or ToolKind.Ellipse;
-        _stroke.IsEnabled = !_busy && kind is ToolKind.Arrow or ToolKind.Line or ToolKind.Rectangle or ToolKind.Ellipse or ToolKind.Pen or ToolKind.Highlighter;
+        _stroke.IsEnabled = !_busy && canStroke;
         _textOptions.Visibility = kind == ToolKind.Text ? Visibility.Visible : Visibility.Collapsed;
+        _deleteButton.Visibility = selected is not null ? Visibility.Visible : Visibility.Collapsed;
         _deleteButton.IsEnabled = !_busy && selected is not null;
+        _resetCrop.Visibility = _document.State.Crop != ImageBounds && kind is ToolKind.Select or ToolKind.Crop ? Visibility.Visible : Visibility.Collapsed;
         _hex.IsEnabled = !_busy && kind != ToolKind.Redaction;
         foreach (var colorButton in _colorButtons) colorButton.IsEnabled = !_busy && kind != ToolKind.Redaction;
         if (kind == ToolKind.Redaction) _hex.Text = "#000000";
         foreach (var pair in _toolButtons)
         {
-            pair.Value.BorderBrush = pair.Key == _tool ? Theme.AccentBrush : Theme.BorderBrush;
-            pair.Value.BorderThickness = new Thickness(pair.Key == _tool ? 2 : 1);
+            pair.Value.BorderBrush = pair.Key == _tool ? Theme.AccentBrush : Brushes.Transparent;
+            if (pair.Key == _tool) pair.Value.SetResourceReference(Control.BackgroundProperty, "Selected");
+            else pair.Value.Background = Brushes.Transparent;
+            pair.Value.BorderThickness = new Thickness(1);
             AutomationProperties.SetHelpText(pair.Value, pair.Key == _tool ? "Selected tool" : "");
         }
         foreach (var button in _colorButtons)
-            button.BorderBrush = button.Tag is Color color && color == _color ? Theme.AccentBrush : Theme.BorderBrush;
+            button.BorderBrush = button.Tag is Color color && color == _color ? Theme.AccentBrush : Brushes.Transparent;
         _surface.Cursor = _tool switch { ToolKind.Pan => Cursors.Hand, ToolKind.Select => Cursors.Arrow, ToolKind.Text => Cursors.IBeam, _ => Cursors.Cross };
         _syncing = false;
     }
@@ -718,16 +831,24 @@ public sealed class EditorWindow : Window
     {
         _surface.Width = _document.State.Crop.Width * _zoom;
         _surface.Height = _document.State.Crop.Height * _zoom;
-        _zoomLabel.Text = $"{_zoom * 100:0}%";
+        double physicalZoom = _zoom * VisualTreeHelper.GetDpi(this).DpiScaleX;
+        _zoomLabel.Text = $"{physicalZoom * 100:0}%";
+        RenderOptions.SetBitmapScalingMode(_surface, physicalZoom >= 1 && Math.Abs(physicalZoom-Math.Round(physicalZoom))<0.001 ? BitmapScalingMode.NearestNeighbor : BitmapScalingMode.HighQuality);
         _surface.InvalidateVisual();
     }
+
+    internal static double DipZoom(double physicalZoom, double dpiScale) => Math.Clamp(physicalZoom, 0.02, 8) / dpiScale;
+
+    private void ActualSize() => SetZoom(DipZoom(1, VisualTreeHelper.GetDpi(this).DpiScaleX));
 
     private void FitImage()
     {
         _fit = true;
-        if (_scroll.ActualWidth <= 48 || _scroll.ActualHeight <= 48) return;
-        _zoom = Math.Clamp(Math.Min((_scroll.ActualWidth - 48) / _document.State.Crop.Width,
-            (_scroll.ActualHeight - 48) / _document.State.Crop.Height), 0.02, 8);
+        if (_scroll.ActualWidth <= 42 || _scroll.ActualHeight <= 42) return;
+        double dpiScale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+        double fitZoom = Math.Min((_scroll.ActualWidth - 42) / _document.State.Crop.Width,
+            (_scroll.ActualHeight - 42) / _document.State.Crop.Height);
+        _zoom = DipZoom(Math.Min(1,fitZoom * dpiScale), dpiScale);
         ResizeSurface();
     }
 
@@ -738,7 +859,8 @@ public sealed class EditorWindow : Window
         double oldZoom = _zoom;
         double centerX = (_scroll.HorizontalOffset + _scroll.ViewportWidth / 2) / oldZoom;
         double centerY = (_scroll.VerticalOffset + _scroll.ViewportHeight / 2) / oldZoom;
-        _zoom = Math.Clamp(zoom, 0.02, 8);
+        double dpiScale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+        _zoom = DipZoom(zoom * dpiScale, dpiScale);
         ResizeSurface();
         _scroll.UpdateLayout();
         _scroll.ScrollToHorizontalOffset(centerX * _zoom - _scroll.ViewportWidth / 2);
@@ -748,8 +870,8 @@ public sealed class EditorWindow : Window
 
     private void ShowStatus(string? message = null)
     {
-        var crop = _document.State.Crop;
-        _status.Text = message ?? $"{crop.Width:0} × {crop.Height:0} px · {_document.State.Annotations.Count} annotations · " + (_tool switch
+        int annotationCount = _document.State.Annotations.Count;
+        _status.Text = message ?? $"{annotationCount} annotation{(annotationCount == 1 ? "" : "s")} · " + (_tool switch
         {
             ToolKind.Select => "Select an annotation to move or resize it",
             ToolKind.Crop => "Drag a crop area; release to apply · Esc cancels",
@@ -792,7 +914,7 @@ public sealed class EditorWindow : Window
                 case Key.Z: CancelGesture(); if (shift) _document.Redo(); else _document.Undo(); break;
                 case Key.Y: CancelGesture(); _document.Redo(); break;
                 case Key.D0: case Key.NumPad0: FitImage(); break;
-                case Key.D1: case Key.NumPad1: SetZoom(1); break;
+                case Key.D1: case Key.NumPad1: ActualSize(); break;
                 case Key.OemPlus: case Key.Add: SetZoom(_zoom * 1.25); break;
                 case Key.OemMinus: case Key.Subtract: SetZoom(_zoom / 1.25); break;
                 default: return;

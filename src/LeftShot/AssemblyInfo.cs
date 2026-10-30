@@ -1,3 +1,9 @@
 using System.Runtime.CompilerServices;
+using System.Reflection;
+[assembly: AssemblyTitle("LeftShot")]
+[assembly: AssemblyProduct("LeftShot")]
+[assembly: AssemblyVersion("0.2.0.0")]
+[assembly: AssemblyFileVersion("0.2.0.0")]
+[assembly: AssemblyInformationalVersion("0.2.0-preview.1")]
 [assembly: InternalsVisibleTo("LeftShot.Tests")]
 [assembly: InternalsVisibleTo("VisualCheck")]

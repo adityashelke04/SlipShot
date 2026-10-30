@@ -50,9 +50,16 @@ internal static class VisualCheck
             var sample=SyntheticDocument();
             var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=1920,Bottom=1080},new Native.RectI {Right=1920,Bottom=1040},1);
             var preview=new PreviewWindow(sample.Source,monitor,8,()=>{},()=>{},()=>{},()=>{});
-            RenderContent(preview,new Size(312,350),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}.png"));
+            RenderContent(preview,new Size(328,360),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}.png"));
             var settings=new SettingsWindow(new AppSettings(),_=>null);
             RenderContent(settings,new Size(460,660),Path.Combine(output,$"settings-{appearance.ToLowerInvariant()}.png"));
+            foreach(var tool in new[]{ToolKind.Text,ToolKind.Rectangle,ToolKind.Redaction})
+            {
+                var contextual=new EditorWindow(SyntheticDocument(),_=>Task.FromResult(false),_=>Task.CompletedTask,_=>{});
+                typeof(EditorWindow).GetMethod("ChooseTool",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(contextual,new object[]{tool});
+                RenderContent(contextual,new Size(640,480),Path.Combine(output,$"editor-{appearance.ToLowerInvariant()}-{tool.ToString().ToLowerInvariant()}-640.png"));
+                ((DocumentViewModel)contextual.DataContext).Dispose();
+            }
         }
         // Do not close the unshown editor objects: no native lifetime or close-dialog path is exercised.
         return 0;
