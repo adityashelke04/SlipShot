@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+.cache/
+.tmp/
+.firecrawl/
+artifacts/
+TestResults/
+*.user
+*.suo
+.vs/
+*.nupkg
+*.png
+*.jpg
+*.jpeg
+*.pdb
