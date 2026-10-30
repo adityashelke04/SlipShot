@@ -157,7 +157,7 @@ internal sealed class AppController : IDisposable
     {
         if(editors.Count>=3){Notify("Three editors are already open. Close one before editing another capture.");return;}
         var document=new EditDocument(shot.Image);
-        var editor=new EditorWindow(document,SaveAsync,CopyAsync,Pin);
+        var editor=new EditorWindow(document,SaveAsync,CopyAsync,Pin,SaveAsAsync);
         editors.Add(editor);documents.Add(editor,document);
         editor.SourceInitialized+=(_,_)=>Native.Protect(editor,false);
         editor.Closed+=(_,_)=> {editors.Remove(editor);documents.Remove(editor);if(exitRequested)app.Dispatcher.BeginInvoke(new Action(TryExit));};
@@ -185,8 +185,22 @@ internal sealed class AppController : IDisposable
         if(saving)return Task.FromResult(false);saving=true;
         try
         {
+            if(!ResourcePolicy.CanAllocate(RetainedBytes(),(long)document.State.Crop.Width*(long)document.State.Crop.Height))throw new InvalidOperationException("Close another editor or reference before saving this image.");
+            string folder=string.IsNullOrWhiteSpace(settings.SaveDirectory)?ImageFiles.DefaultSaveDirectory:settings.SaveDirectory;
+            string path=ImageFiles.QuickSave(DocumentRenderer.Render(document),folder,DateTime.Now);
+            document.MarkSaved();Notify("Saved to "+path);return Task.FromResult(true);
+        }
+        catch(Exception ex) when(IsExpected(ex))
+        {MessageBox.Show("Could not save to your SlipShot folder. Check the save folder in Settings, or use Save As in the editor. "+Friendly(ex),"SlipShot",MessageBoxButton.OK,MessageBoxImage.Warning);return Task.FromResult(false);}
+        finally {saving=false;}
+    }
+    private Task<bool> SaveAsAsync(EditDocument document)
+    {
+        if(saving)return Task.FromResult(false);saving=true;
+        try
+        {
             if(!ResourcePolicy.CanAllocate(RetainedBytes(),(long)document.State.Crop.Width*(long)document.State.Crop.Height))throw new InvalidOperationException("Close another editor or reference before exporting this image.");
-            string directory=settings.SaveDirectory??AppContext.BaseDirectory;
+            string directory=settings.SaveDirectory??ImageFiles.DefaultSaveDirectory;
             if(!Directory.Exists(directory))directory=AppContext.BaseDirectory;
             var dialog=new SaveFileDialog {Title="Save flattened screenshot",Filter="PNG image|*.png|JPEG image|*.jpg",DefaultExt=".png",AddExtension=true,OverwritePrompt=false,InitialDirectory=directory,FileName=Path.GetFileName(ImageFiles.GenerateName(directory,DateTime.Now))};
             if(dialog.ShowDialog()!=true)return Task.FromResult(false);

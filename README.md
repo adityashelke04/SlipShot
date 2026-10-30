@@ -4,7 +4,7 @@ Previously developed under the working name LeftShot. Historical audit records a
 
 A small, local-only Windows screenshot editor. Capture a region, open the bottom-left preview, annotate, and copy or save a flattened image.
 
-**0.2.3-preview.1 — bounded preview lifetime and newest-capture handoff.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
+**0.2.4-preview.1 — one-click PNG saving to your SlipShot folder.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
 
 ## App preview
 
@@ -25,9 +25,11 @@ The real WPF interface, rendered with generated demo content only. **No personal
 
 Windows 10 version 2004 or newer / Windows 11, **x64**, with the **.NET 8 Windows Desktop Runtime**. Keep all files in the portable folder together and run `SlipShot.exe`. It starts in the notification area, without an editor or capture overlay appearing automatically. Default capture shortcut: **Ctrl+Alt+S**. The tray also provides capture, recent-image access, settings and exit. Windows may hide the tray icon in its overflow menu.
 
-Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.3-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
+Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.4-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
 
-All preferences live in `data/settings.json` beside the executable. Put the portable folder in a location you can write. There is no screenshot history or automatic saving. Choosing Save opens a dialog; deliberately dragging creates a temporary flattened PNG in `data/drag-out` beside the app. No cloud location is selected automatically. An explicitly chosen folder is the user's responsibility.
+All preferences live in `data/settings.json` beside the executable. Put the portable folder in a location you can write. There is no screenshot history or automatic saving on capture. **Save** writes a new PNG directly to **F:\SlipShot Captures** on this installation, without asking for a location. Change **Quick-save folder** in Settings whenever needed. The folder is created on first Save; each click uses a unique timestamp/suffix and never overwrites an earlier file. **Save As…** (the arrow beside Save, or Ctrl+Shift+S) retains the dialog for other folders, filenames and JPEG. A missing/unwritable destination produces an error and keeps the edits; the app never silently saves somewhere else.
+
+The default follows the local drive hosting the app (`<drive>:\SlipShot Captures`), so it remains stable across versioned installs. A network-hosted portable app instead defaults to local application data. Deliberately dragging creates a temporary flattened PNG in `data/drag-out` beside the app. No cloud location is selected automatically; a custom destination is explicitly user-selected.
 
 ## Everyday flow
 

@@ -1,5 +1,9 @@
 # Progress
 
+## Latest: 0.2.4-preview.1 quick save
+
+Save now uses configured SaveDirectory or same-local-drive SlipShot Captures (F:/SlipShot Captures here), creating it on explicit Save and choosing unique PNG names without overwriting. Settings quick-save path may be new/absolute; Save As preserved via editorarrow/CtrlShiftS for JPEG/otherpaths. No automatic capture saving. Full suite104passed; compactUI reviewed; independentreview found no blocking issue. Latest package/install version0.2.4-preview.1; activate by normal Exit/reopen from Start. Current installed0.2.3process preserved; no unsavedwork discarded. Evidence docs/QUICK_SAVE_REVIEW.md. Commit/push authorized.
+
 ## Latest fix: 0.2.3-preview.1
 
 Investigated installed stuck preview using only window metadata (pointeroutside/notforeground); no personal image read. Confirmed FIFOcardA-versus-latestB mismatch and publicationduringcapture path. Fixed latest-only replacement with identity-guarded Closed, capture-active suppression, async selection completion; optional copy errors remain distinct from capture success. Default10second idle+20second aggregate hover grace; physical pointer/foreground check, missed-release recovery, and timer-driven close independent of fade. Genuine hold/drag/copy protected. Persistent clipboardBitmap+PNG added, old pending copy requests superseded. Suite102passed including realtimer/unshownWindow regression, no native clipboard/capture test. Packaged0.2.3; installed fixed payload at F:/Apps/SlipShot/versions/0.2.3-preview.1 and updated Start menu. Existing10448process deliberately untouched; normal Exit then Start activates fix. Settings preserved with PreviewSeconds10, no capture files copied. Userrequestedcommit+push aftertests.

@@ -28,8 +28,8 @@ internal sealed class SettingsWindow : Window
         body.Children.Add(Theme.Text("Default: 10 seconds. Hover adds up to twice this duration; dragging stays protected. Latest capture remains in the tray.",12,true));
         var motion=new CheckBox {Content="Reduce motion",IsChecked=initial.ReducedMotion};body.Children.Add(motion);
         var copy=new CheckBox {Content="Copy automatically after capture",IsChecked=initial.AutoCopy};body.Children.Add(copy);
-        var folder=Field("Preferred save folder (optional)",initial.SaveDirectory??"");
-        body.Children.Add(Theme.Text("Only used when you choose Save. No screenshot history is written.",12,true));
+        var folder=Field("Quick-save folder",initial.SaveDirectory??ImageFiles.DefaultSaveDirectory);
+        body.Children.Add(Theme.Text("Save writes a uniquely named PNG here without a dialog. Missing folders are created on Save. Save As is available in the editor.",12,true));
         var quality=Field("JPEG quality (1–100)",initial.JpegQuality.ToString());
         var background=Field("JPEG opaque background (#RRGGBB)",initial.JpegBackground);
         var error=Theme.Text("",13);error.Margin=new Thickness(0,8,0,8);AutomationProperties.SetLiveSetting(error,AutomationLiveSetting.Polite);footer.Children.Add(error);
@@ -39,7 +39,11 @@ internal sealed class SettingsWindow : Window
             if(!int.TryParse(timeout.Text,out int seconds)||seconds<2||seconds>60) {error.Text="Preview duration must be 2–60 seconds.";return;}
             if(!int.TryParse(quality.Text,out int jpeg)||jpeg<1||jpeg>100) {error.Text="JPEG quality must be 1–100.";return;}
             if(background.Text.Length!=7 || background.Text[0]!='#' || !int.TryParse(background.Text.AsSpan(1),System.Globalization.NumberStyles.HexNumber,null,out _)) {error.Text="Choose an opaque background as #RRGGBB.";return;}
-            if(!string.IsNullOrWhiteSpace(folder.Text)&&!Directory.Exists(folder.Text)) {error.Text="That folder is unavailable. Choose an existing folder or leave it blank.";return;}
+            if(!string.IsNullOrWhiteSpace(folder.Text))
+            {
+                try {if(!Path.IsPathFullyQualified(folder.Text)||folder.Text.IndexOfAny(Path.GetInvalidPathChars())>=0)throw new ArgumentException();Path.GetFullPath(folder.Text);}
+                catch(Exception ex) when(ex is ArgumentException or NotSupportedException or PathTooLongException){error.Text="Enter a full folder path, such as "+ImageFiles.DefaultSaveDirectory;return;}
+            }
             var changed=initial with {Hotkey=hotkey.Text,Appearance=(string)appearance.SelectedItem,PreviewSeconds=seconds,ReducedMotion=motion.IsChecked==true,AutoCopy=copy.IsChecked==true,SaveDirectory=string.IsNullOrWhiteSpace(folder.Text)?null:folder.Text,JpegQuality=jpeg,JpegBackground=background.Text};
             string? failure=apply(changed);if(failure is null) Close();else error.Text=failure;
         },true));

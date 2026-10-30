@@ -21,6 +21,7 @@ public sealed class EditorWindow : Window
     private readonly DocumentViewModel _viewModel;
     private EditDocument _document => _viewModel.Document;
     private readonly Func<EditDocument, Task<bool>> _save;
+    private readonly Func<EditDocument, Task<bool>> _saveAs;
     private readonly Func<EditDocument, Task> _copy;
     private readonly Action<BitmapSource> _pin;
     private readonly DrawingSurface _surface;
@@ -45,6 +46,7 @@ public sealed class EditorWindow : Window
     private readonly Button _undo;
     private readonly Button _redo;
     private readonly Button _saveButton;
+    private readonly Button _saveMore;
     private readonly Button _copyButton;
     private readonly Button _pinButton;
     private readonly Button _deleteButton;
@@ -77,11 +79,12 @@ public sealed class EditorWindow : Window
     private Rect? _cropPreview;
 
     public EditorWindow(EditDocument document, Func<EditDocument, Task<bool>> save,
-        Func<EditDocument, Task> copy, Action<BitmapSource> pin)
+        Func<EditDocument, Task> copy, Action<BitmapSource> pin, Func<EditDocument,Task<bool>>? saveAs = null)
     {
         _viewModel = new DocumentViewModel(document);
         DataContext = _viewModel;
         _save = save;
+        _saveAs = saveAs ?? save;
         _copy = copy;
         _pin = pin;
         SetBinding(TitleProperty, new System.Windows.Data.Binding(nameof(DocumentViewModel.Title)));
@@ -157,7 +160,12 @@ public sealed class EditorWindow : Window
         header.Children.Add(zoomControls);
         var exports = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
         _copyButton = AddButton(exports, "Copy", () => _ = CopyAsync(), "Copy flattened image (Ctrl+C)");
-        _saveButton = AddButton(exports, "Save…", () => _ = SaveAsync(), "Save flattened image (Ctrl+S)", true);
+        _saveButton = AddButton(exports, "Save", () => _ = SaveAsync(), "Save PNG to your SlipShot folder (Ctrl+S)", true);
+        var saveMenu=new ContextMenu();
+        var saveAsItem=new MenuItem {Header="Save As…",InputGestureText="Ctrl+Shift+S"};
+        saveAsItem.Click+=(_,_)=>_ = SaveAsync(true);saveMenu.Items.Add(saveAsItem);
+        _saveMore=Theme.IconButton("More save options","M 3,5 L 8,10 L 13,5",()=>saveMenu.IsOpen=true,size:28);
+        saveMenu.PlacementTarget=_saveMore;_saveMore.ContextMenu=saveMenu;exports.Children.Add(_saveMore);
         _copyButton.Padding = _saveButton.Padding = new Thickness(14, 7, 14, 7);
         _copyButton.Margin = new Thickness(0, 0, 6, 0);
         _saveButton.Margin = new Thickness(0);
@@ -909,7 +917,7 @@ public sealed class EditorWindow : Window
         {
             switch (e.Key)
             {
-                case Key.S: _ = SaveAsync(); break;
+                case Key.S: _ = SaveAsync(shift); break;
                 case Key.C: _ = CopyAsync(); break;
                 case Key.Z: CancelGesture(); if (shift) _document.Redo(); else _document.Undo(); break;
                 case Key.Y: CancelGesture(); _document.Redo(); break;
@@ -946,14 +954,14 @@ public sealed class EditorWindow : Window
     private void SetBusy(bool busy)
     {
         _busy = busy;
-        _saveButton.IsEnabled = _copyButton.IsEnabled = _pinButton.IsEnabled = !busy;
+        _saveButton.IsEnabled = _saveMore.IsEnabled = _copyButton.IsEnabled = _pinButton.IsEnabled = !busy;
         _surface.IsEnabled = _layers.IsEnabled = _hex.IsEnabled = _textOptions.IsEnabled = !busy;
         foreach (var button in _toolButtons.Values.Concat(_colorButtons)) button.IsEnabled = !busy;
         _resetCrop.IsEnabled = !busy && _document.State.Crop != ImageBounds;
         RefreshProperties();
     }
 
-    private async Task<bool> SaveAsync()
+    private async Task<bool> SaveAsync(bool saveAs=false)
     {
         if (_busy) return false;
         CancelGesture();
@@ -961,9 +969,9 @@ public sealed class EditorWindow : Window
         ShowStatus("Saving image…");
         try
         {
-            bool saved = await _save(_document);
+            bool saved = await (saveAs?_saveAs:_save)(_document);
             if (saved) _document.MarkSaved();
-            ShowStatus(saved ? "Image saved." : "Save canceled. Your edits are still here.");
+            ShowStatus(saved ? "Image saved." : "Image not saved. Your edits are still here.");
             return saved;
         }
         catch (Exception ex) { ShowStatus("Could not save the image. " + ex.Message); return false; }
@@ -1025,7 +1033,7 @@ public sealed class EditorWindow : Window
         var cancel = AddButton(actions, "Cancel", () => dialog.Close(), "Return to the editor");
         cancel.IsCancel = true;
         AddButton(actions, "Discard", () => { choice = CloseChoice.Discard; dialog.Close(); }, "Close without saving");
-        var save = AddButton(actions, "Save…", () => { choice = CloseChoice.Save; dialog.Close(); }, "Save before closing", true);
+        var save = AddButton(actions, "Save", () => { choice = CloseChoice.Save; dialog.Close(); }, "Save to your SlipShot folder before closing", true);
         save.IsDefault = true;
         content.Children.Add(actions);
         dialog.Content = content;

@@ -9,6 +9,33 @@ namespace SlipShot.Services;
 
 public static class ImageFiles
 {
+    public static string DefaultSaveDirectory
+    {
+        get
+        {
+            string root=Path.GetPathRoot(AppContext.BaseDirectory)!;
+            // A portable app launched from a network share must not silently save back to it.
+            return root.StartsWith(@"\\",StringComparison.Ordinal)
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"SlipShot","Captures")
+                : Path.Combine(root,"SlipShot Captures");
+        }
+    }
+
+    public static string QuickSave(BitmapSource image,string directory,DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        if(!Path.IsPathFullyQualified(directory))throw new ArgumentException("Choose an absolute save folder.",nameof(directory));
+        string folder=Path.GetFullPath(directory);
+        Directory.CreateDirectory(folder);
+        for(int attempt=0;attempt<16;attempt++)
+        {
+            string path=GenerateName(folder,now);
+            try {Save(image,path);return path;}
+            catch(IOException) when(File.Exists(path)||Directory.Exists(path)) { }
+        }
+        throw new IOException("Could not reserve a unique filename. Try saving again.");
+    }
+
     public static void Save(BitmapSource image, string path, bool overwrite = false, int jpegQuality = 90, Color? jpegBackground = null)
     {
         ArgumentNullException.ThrowIfNull(image);

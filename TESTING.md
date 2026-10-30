@@ -4,6 +4,8 @@ Automated runs use synthetic pixels, fake clipboard sinks, temporary files under
 
 ## Automated evidence
 
+0.2.4: quick-save fixtures verify first-use directory creation, PNG dimensions, repeated same-timestamp saves without overwriting, blocked-folder preservation and rejected relative paths. Existing PNG/JPEG, atomic failure and collision tests remain. Manual check: Save from preview/editor creates a file without a picker; Ctrl+Shift+S and Save arrow open Save As; changing the Settings folder takes effect; unavailable folder keeps unsaved edits. Actual private screenshots were not used for these tests.
+
 0.2.3 regression pass:102tests passed. New tests cover10second idle/30second passive limit, aggregate hover allowance, active gestures, missed release recovery, fade-independent closure using a real dispatcher and an unshown zero-HWND preview, latest-capture replacement, capture-busy publication guard, and bitmap/PNG copy privacy and pixel identity. No real desktop or clipboard content used. Manually verify two rapid captures, Copy then app-switch, >30second parked hover, active long drag, cancelled capture and capture during fade. These real-input checks remain NOT RUN.
 
 Run `./scripts/build-fallback.ps1 -Test -VisualCheck` or the SDK commands in README. Machine: Windows x64, .NET desktop runtime 8.0.11. Warnings are errors in fallback compilation. Latest exact totals are in `docs/VERIFICATION.md` and `artifacts/tests/TestResult.xml`.

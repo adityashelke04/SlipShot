@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4-preview.1 — 2026-10-30
+
+Save and Ctrl+S now write a uniquely named PNG directly to the configured SlipShot folder, without a location dialog. Default for this F-drive install is F:/SlipShot Captures; missing folders are created on explicit Save. Save As remains in the editor arrow menu and Ctrl+Shift+S for other paths/JPEG. Folder errors do not silently redirect or mark the document saved. No automatic saving on capture added.
+
 ## 0.2.3-preview.1 — 2026-10-30
 
 - Default preview timeout10seconds; passive hover/focus grace capped at twice the configured duration. Real hold/drag/copy remains protected. Native pointer/foreground validation and missed-release recovery prevent stale WPF flags pinning the card indefinitely.
