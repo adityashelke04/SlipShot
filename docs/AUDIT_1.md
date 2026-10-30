@@ -33,3 +33,7 @@ Scope: Core, Services/Native.cs, Services/DesktopCapture.cs, UI/SelectionWindow.
 ## Verification status
 
 Parent reported 18 original synthetic tests passing through the official Roslyn/runtime fallback before this audit. Added audit tests and fixes are ready for the parent's serialized compilation/test run; this agent did not execute builds. New tests were written before production changes, but a RED execution was not observed because builds are serialized by the parent. Native acceptance remains NOT RUN.
+
+## Root integration verification
+
+The later full suite passed 62 tests. Generation validity and active cancellation are checked before overlay/delivery; projected buffer accounting now includes distinct queue images. Preview uses Stopwatch + PreviewLifetime. Tray reopen refreshes the original monitor or falls back to a current monitor after disconnect; latest image is retained while pending previews are dismissed on display change. All-black frames remain deliberately rejected with a documented limitation, not a claim that black proves protected content. Native assertions remain NOT RUN.

@@ -38,6 +38,14 @@ internal static class Native
         return new CaptureMonitor(handle, info.Monitor, info.Work, scale);
     }
 
+    internal static CaptureMonitor RefreshMonitor(CaptureMonitor previous)
+    {
+        var info=new MonitorInfo {Size=Marshal.SizeOf<MonitorInfo>()};
+        if(!GetMonitorInfo(previous.Handle,ref info))return MonitorAtPointer();
+        double scale=GetDpiForMonitor(previous.Handle,0,out var dpi,out _)==0?dpi/96d:1;
+        return new CaptureMonitor(previous.Handle,info.Monitor,info.Work,scale);
+    }
+
     internal static void Protect(Window window, bool nonactivating)
     {
         var handle = new WindowInteropHelper(window).Handle;

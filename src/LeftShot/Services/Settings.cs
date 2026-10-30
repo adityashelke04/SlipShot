@@ -69,8 +69,9 @@ public sealed class SettingsStore
     private static bool Valid(AppSettings value)
     {
         if (value.Version != 1 || string.IsNullOrWhiteSpace(value.Hotkey) || value.Hotkey.Length > 100 ||
-            value.Appearance is not ("System" or "Light" or "Dark") || value.PreviewSeconds is < 1 or > 60 ||
+            value.Appearance is not ("System" or "Light" or "Dark") || value.PreviewSeconds is < 2 or > 60 ||
             value.JpegQuality is < 1 or > 100 || string.IsNullOrWhiteSpace(value.JpegBackground)) return false;
+        if (!Hotkeys.TryParse(value.Hotkey, out _, out _)) return false;
         try { return ColorConverter.ConvertFromString(value.JpegBackground) is Color { A: 255 }; }
         catch (Exception error) when (error is FormatException or ArgumentException or NotSupportedException) { return false; }
     }

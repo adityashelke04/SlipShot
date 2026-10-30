@@ -38,3 +38,7 @@ scripts/VisualCheck.cs renders actual detached editor content at 1240 × 820, 85
 The following remain **NOT RUN**, as unattended desktop interaction is prohibited: keyboard focus traversal in a shown window; screen reader announcements; mouse capture and lost capture on real windows; native close/save dialog sequences; monitor movement and mixed-DPI behavior; real high-contrast switching; clipboard/capture/hotkey integration; pin-window activation and game focus behavior. Synthetic layout rendering cannot establish any of these behaviors.
 
 Known scope limits: resizing is pointer-driven, with keyboard nudging but no keyboard resize shortcut; text is edited in the toolbar rather than in an inline rich-text overlay; the editor does not expose z-order changes, rotation, or rich-text formatting. None of these controls is shown as an inactive feature.
+
+## Root offscreen review
+
+Compiled/reran the actual-content harness and inspected light/dark editor layouts at three sizes plus preview and settings surfaces. Corrected dark ComboBox contrast and live-theme brush propagation; added a visible combo focus border, 80/100ms button feedback honoring reduced motion, and a fixed settings Save footer. All ten fixtures render in software without showing a window. These are synthetic layout checks; interactive focus, high contrast, screen-reader output and native window behavior remain NOT RUN.

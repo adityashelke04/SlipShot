@@ -41,6 +41,7 @@ internal sealed class DesktopCapture : IDesktopCapture
         {
             if (!BitBlt(memory.DangerousGetHandle(),0,0,width,height,screen.DangerousGetHandle(),monitor.Bounds.Left,monitor.Bounds.Top,0x40CC0020))
                 throw new Win32Exception();
+            GdiFlush();
             cancellation.ThrowIfCancellationRequested();
             var pixels = new byte[checked(width * height * 4)];
             Marshal.Copy(bits,pixels,0,pixels.Length);
@@ -73,6 +74,7 @@ internal sealed class DesktopCapture : IDesktopCapture
     [DllImport("gdi32.dll")] private static extern IntPtr CreateCompatibleDC(IntPtr dc);
     [DllImport("gdi32.dll")] private static extern bool DeleteDC(IntPtr dc);
     [DllImport("gdi32.dll")] private static extern bool DeleteObject(IntPtr obj);
+    [DllImport("gdi32.dll")] private static extern bool GdiFlush();
     [DllImport("gdi32.dll")] private static extern IntPtr SelectObject(IntPtr dc,IntPtr obj);
     [DllImport("gdi32.dll")] private static extern IntPtr CreateDIBSection(IntPtr dc,ref BitmapInfo info,uint usage,out IntPtr bits,IntPtr section,uint offset);
     [DllImport("gdi32.dll", SetLastError=true)] private static extern bool BitBlt(IntPtr dest,int x,int y,int width,int height,IntPtr src,int sx,int sy,uint rop);

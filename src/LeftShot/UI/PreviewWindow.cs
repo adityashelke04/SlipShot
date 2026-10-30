@@ -33,7 +33,7 @@ internal sealed class PreviewWindow : Window
         var thumbnail=new Image { Source=image,Height=140,Stretch=Stretch.Uniform,Margin=new Thickness(0,8,0,12) };
         var imageButton=new Button { Content=thumbnail,Padding=new Thickness(0),ToolTip="Open captured image in editor" }; System.Windows.Automation.AutomationProperties.SetName(imageButton,"Edit captured image"); imageButton.Click+=(_,_)=>edit(); stack.Children.Add(imageButton);
         var actions=new WrapPanel(); actions.Children.Add(Theme.Button("Edit",edit,true));actions.Children.Add(Theme.Button("Copy",copy));actions.Children.Add(Theme.Button("Save",save));actions.Children.Add(Theme.Button("Pin",pin));stack.Children.Add(actions);
-        stack.Children.Add(Theme.Text("Memory only · Latest stays in the tray. Older unsaved captures are replaced.",11,true));
+        stack.Children.Add(Theme.Text("Memory only · Latest stays in the tray. Older unsaved captures are replaced.",12,true));
         var card=new Border { Child=stack,CornerRadius=new CornerRadius(12),BorderThickness=new Thickness(1),RenderTransform=translation };
         card.SetResourceReference(Border.BackgroundProperty,"Panel");card.SetResourceReference(Border.BorderBrushProperty,"Border");Content=new ScrollViewer {Content=card,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};
         SourceInitialized+=(_,_)=>Native.Protect(this,true);

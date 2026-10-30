@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using LeftShot.Core;
 using LeftShot.Services;
 using NUnit.Framework;
 
@@ -22,8 +23,9 @@ public sealed class ServiceTests
     public void CreateTestDirectory()
     {
         string parent = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "test-temp"));
-        Assert.That(Path.GetPathRoot(parent), Is.EqualTo("F:\\").IgnoreCase, "Test files must remain on the authorized F drive.");
-        directory = Path.Combine(parent, Guid.NewGuid().ToString("N"));
+        directory = Path.GetFullPath(Path.Combine(parent, Guid.NewGuid().ToString("N")));
+        Assert.That(directory.StartsWith(parent + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase), Is.True,
+            "Generated test files must remain inside the application-local test-temp directory.");
         Directory.CreateDirectory(directory);
     }
 
@@ -89,6 +91,56 @@ public sealed class ServiceTests
         Assert.That(color.G, Is.GreaterThanOrEqualTo(250));
         Assert.That(color.B, Is.GreaterThanOrEqualTo(250));
         AssertDimensions(jpeg, 12, 10);
+    }
+
+    [Test]
+    public void CroppedRedactionStaysOpaqueThroughFileAndInjectedClipboardWithoutSourceMetadata()
+    {
+        const string sourceTag = "/tEXt/{str=Description}";
+        byte[] sourcePixels = new byte[8 * 7 * 4];
+        for (int i = 0; i < sourcePixels.Length; i += 4)
+        {
+            sourcePixels[i] = sourcePixels[i + 2] = sourcePixels[i + 3] = 255;
+        }
+        BitmapSource pixels = BitmapSource.Create(8, 7, 96, 96, PixelFormats.Bgra32, null, sourcePixels, 8 * 4);
+        var metadata = new BitmapMetadata("png");
+        metadata.SetQuery(sourceTag, "private source description");
+        BitmapFrame source = BitmapFrame.Create(pixels, CoreTests.Image(2, 2), metadata, null);
+        Assert.That(((BitmapMetadata)source.Metadata).ContainsQuery(sourceTag), Is.True);
+        Assert.That(source.Thumbnail, Is.Not.Null);
+        var document = new EditDocument(source);
+        document.Commit(new DocumentState(new Rect(1, 1, 6, 5), new[]
+        {
+            new Annotation(Guid.NewGuid(), ToolKind.Redaction, new Rect(2, 2, 3, 2), Colors.Transparent, 1)
+        }));
+        BitmapSource flattened = DocumentRenderer.Render(document);
+        string path = Path.Combine(directory, "redacted.png");
+        ImageFiles.Save(flattened, path);
+        var saved = (BitmapFrame)Read(path);
+        Assert.That(saved.PixelWidth, Is.EqualTo(6));
+        Assert.That(saved.PixelHeight, Is.EqualTo(5));
+        Assert.That(saved.Thumbnail, Is.Null);
+        Assert.That(saved.Metadata is BitmapMetadata savedMetadata && savedMetadata.ContainsQuery(sourceTag), Is.False);
+        var sink = new FakeClipboard(0);
+        Pump(ClipboardWriter.CopyAsync(flattened, sink));
+        Assert.That(sink.LastImage, Is.SameAs(flattened).And.TypeOf<RenderTargetBitmap>());
+        Assert.That(sink.LastImage!.Metadata, Is.Null);
+        byte[] expected = new byte[6 * 5 * 4];
+        for (int y = 0; y < 5; y++)
+        for (int x = 0; x < 6; x++)
+        {
+            int offset = (y * 6 + x) * 4;
+            expected[offset + 3] = 255;
+            if (x >= 1 && x < 4 && y >= 1 && y < 3) continue;
+            expected[offset] = expected[offset + 2] = 255;
+        }
+        foreach (BitmapSource output in new[] { saved, sink.LastImage! })
+        {
+            var converted = new FormatConvertedBitmap(output, PixelFormats.Bgra32, null, 0);
+            byte[] actual = new byte[expected.Length];
+            converted.CopyPixels(actual, 6 * 4, 0);
+            Assert.That(actual, Is.EqualTo(expected));
+        }
     }
 
     [Test]
@@ -202,6 +254,7 @@ public sealed class ServiceTests
     private sealed class FakeClipboard(int failures, int code = unchecked((int)0x800401D0)) : IClipboardSink
     {
         public int Attempts { get; private set; }
+        public BitmapSource? LastImage { get; private set; }
         public List<int> Threads { get; } = new();
         public List<ApartmentState> Apartments { get; } = new();
         public void SetImage(BitmapSource image)
@@ -210,6 +263,7 @@ public sealed class ServiceTests
             Threads.Add(Environment.CurrentManagedThreadId);
             Apartments.Add(Thread.CurrentThread.GetApartmentState());
             if (Attempts <= failures) throw new ExternalException("Injected clipboard error", code);
+            LastImage = image;
         }
     }
 }

@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LeftShot.Core;
 using LeftShot.UI;
+using LeftShot.Services;
 
 internal static class VisualCheck
 {
@@ -46,9 +47,24 @@ internal static class VisualCheck
                 ((DocumentViewModel)editor.DataContext).Dispose();
                 Console.WriteLine(path);
             }
+            var sample=SyntheticDocument();
+            var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=1920,Bottom=1080},new Native.RectI {Right=1920,Bottom=1040},1);
+            var preview=new PreviewWindow(sample.Source,monitor,8,()=>{},()=>{},()=>{},()=>{});
+            RenderContent(preview,new Size(312,350),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}.png"));
+            var settings=new SettingsWindow(new AppSettings(),_=>null);
+            RenderContent(settings,new Size(460,660),Path.Combine(output,$"settings-{appearance.ToLowerInvariant()}.png"));
         }
         // Do not close the unshown editor objects: no native lifetime or close-dialog path is exercised.
         return 0;
+    }
+
+    private static void RenderContent(Window window,Size size,string path)
+    {
+        var content=(FrameworkElement)window.Content;window.Content=null;
+        TextElement.SetFontFamily(content,new FontFamily("Segoe UI"));TextElement.SetFontSize(content,13);
+        content.Measure(size);content.Arrange(new Rect(size));content.UpdateLayout();
+        var image=new RenderTargetBitmap((int)size.Width,(int)size.Height,96,96,PixelFormats.Pbgra32);image.Render(content);
+        var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));using(var stream=File.Create(path))encoder.Save(stream);Console.WriteLine(path);
     }
 
     private static EditDocument SyntheticDocument()
