@@ -1,21 +1,53 @@
-# Visual and interaction specification
+﻿# SlipShot visual and interaction specification
 
-## Current identity (0.2.7)
+Current identity: 0.2.8-preview.1. Mode: Operate. A compact native Windows utility for focused work and gaming; the screenshot stays central. Historical specifications remain in Git history.
 
-User explicitly requested orange#D97757 and near-black#141413 from Anthropic's published palette. Frame-S is the selected original mark; generated alternatives and audits live under docs/branding. Runtime uses exact-color SVG-derived icon assets, not AI raster boards. Normal surfaces use warm neutral derivatives; primary accent/on-accent colors stay exact, light focus outlines use darker#A04F35 for contrast and high contrast overrides with system colors. This supersedes earlier mint/graphite tokens below.
+## Identity
 
-Preview primary actions are one row: Edit/Copy/Save/Pin. Infrequent folder navigation belongs in a28DIP bordered icon box immediately beside footer Latest in tray, with accessible full name and tooltip. No extra primary row. Primary action hierarchy and Save-once behavior remain intact.
+Frame-S is the user-selected original mark: opposing capture brackets form an S. Exact-color vector masters are under `src/SlipShot/Assets`; generated concept boards are references, not production icons. UI headers use the dark variant on light surfaces and orange on dark surfaces. Windows executable, title and tray icons use orange on a charcoal tile, with nine size-specific frames. No trademark clearance or Anthropic affiliation is claimed.
 
-Reading this as a compact Windows utility for focused work and gaming, with a calm native language. Mode: Operate. No dashboard, onboarding, marketing or animated decoration. User requirements override web-specific skill suggestions.
+Orange #D97757 and charcoal #141413 follow the user-requested palette. Provenance: [Anthropic's published palette](https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md). All geometry and UI implementation are original.
 
-Tokens: Segoe UI 13 body, 12 secondary, 16 section, 24 title; spacing 4/8/12/16/24/32 DIP; control corners 8, floating surfaces 12. Dark background #17191D, panel #22252B, border #42464F, text #F3F4F6, muted #B8BEC8. Light background #F3F4F6, panel #FFFFFF, border #CCD1D8, text #20242A, muted #555E6C. Accent #257A68 light / #82D8BE dark. System high-contrast colors take priority. System theme default, explicit light/dark overrides.
+## Tokens
 
-Editor (0.2 redesign): native window chrome, compact identity/undo/zoom/export header, a narrow two-column labeled tool rail, contextual color/stroke/text controls, and an image-first canvas. The annotations panel is closed by default. No wall of outlined buttons. Only the primary action is accent-filled; other controls use quiet hover surfaces. Selected tools retain a tinted background and clear accent edge. Original vector icons complement labels. Standard focus rectangles plus explicit focus borders; disabled opacity .45. No custom font downloads. 100% means one source pixel per physical screen pixel; DPI changes preserve that zoom.
+| Role | Light | Dark |
+|---|---|---|
+| Surface | #FAF9F5 | #141413 |
+| Panel | #FFFFFF | #20201E |
+| Canvas | #E8E6DC | #10100F |
+| Ink | #141413 | #FAF9F5 |
+| Muted | #625F57 | #B0AEA5 |
+| Decorative divider | #D8D5CC | #3A3A36 |
+| Input outline / scroll thumb | #868279 | #79776F |
+| Accent | #D97757 | #D97757 |
+| On accent | #141413 | #141413 |
+| Primary hover / pressed | #E38B6D / #CB7053 | #E38B6D / #CB7053 |
+| Focus | #A04F35 | #D97757 |
+| Selected | #F4E4DC | #35241F |
+| Hover / pressed | #EFEDE6 / #EAD7CC | #30302C / #453027 |
+| Error | #A33225 | #FFB4A5 |
 
-Preview (0.2 redesign): 328 DIP wide, bottom-left of capture monitor work area, 16 DIP inset, adaptive width on small displays. Compact crop mark + Capture ready header, image on a recessed canvas, dimensions and drag hint, segmented Edit / Copy / Save / Pin. Close uses a small accessible vector button. 180ms opacity/translation entrance, 120ms dismissal; reduced motion disables transitions. Preview never activates on appearance. Eight-second timeout pauses on hover, held pointer and OLE drag, then refreshes after a gesture. Click edits; crossing the system drag threshold hands off a standard Windows payload without opening the editor. Footer/tooltip disclose temporary PNG creation on explicit drag. One visible and up to three pending, drop oldest pending on overflow; most recent retained for tray reopen.
+Typography: installed Segoe UI; 13 body, 11–12 secondary, 15–16 sections, 24 settings title. Spacing: 4/8/12/16/24/32 DIP. Controls use 8-pixel corners; preview uses 12. Native WPF behavior and automation peers are retained. No downloaded fonts or styling dependencies.
 
-Current palette: dark Surface #191C20, Panel #22262B, Canvas #101316, Border #363D43, Ink #F0F3F5, Muted #A3ADB5, Accent #9DE4C7, OnAccent #142C23, Selected #2A403B. Light Surface #F7F8FA, Panel white, Canvas #E9EDF0, Border #DDE3E7, Ink #1E272C, Muted #5F6C75, Accent #197456, OnAccent white, Selected #E2F2EB. These replace the initial palette above; high contrast still overrides them.
+Primary fills use dark text and an inner dark keyboard-focus outline. Secondary controls have quiet hover/press surfaces and visible focus edges. Disabled opacity is 0.45. Shared templates cover inputs, checkbox, dropdown, tooltip, flat export menu, annotation selection and both scrollbars. Settings validation is announced and targets the invalid field.
 
-Editor entrance: 180ms opacity only. No capture/save/copy waits for animation. Interactions use explicit hit targets, accessible names, keyboard focus. Text editing suppresses document shortcuts. Every surfaced action must work; unfinished optional actions stay absent.
+High contrast replaces brand colors with Windows system colors, uses the system tray-menu renderer and disables animation. System appearance is default; explicit Light and Dark are available. Existing windows use dynamic resources, including retained drawing icons. Windows 11 title bars request the documented dark preference; Windows 10 and native OS file/message dialogs retain system chrome. See [Microsoft DWM attributes](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute).
 
-0.2.3 behavior supersedes earlier preview timing/queue descriptions:10second default; at most20additional seconds shared hover/focus grace; real held gestures, drag and copy pause expiry. Native pointer/foreground checks and timer-driven closure prevent passive states or lost animations pinning the window. A successful capture replaces the previous card, with latest image retained in tray and no older-card resurfacing. Copy shows in-card success/error feedback and publishes bitmap+PNG. Synthetic offscreen render review is allowed; native target interoperability remains NOT RUN unless explicitly observed.
+## Surfaces
+
+- Preview: 328 DIP, adaptive to small work areas, bottom-left with 16 DIP inset. Frame-S + Capture ready, aspect-correct thumbnail, drag hint/dimensions and one Edit/Copy/Save/Pin row. A 28×28 folder box immediately follows Latest in tray.
+- Editor: compact identity/undo/zoom/export header, two-column labeled tool rail, contextual controls, optional annotations panel and image-first canvas. 100% means one source pixel per physical pixel. Document annotation colors never change with the theme.
+- Settings: three flat sections—Appearance, Capture, Saving & export—with scrolling body and fixed Save/Cancel/error footer. Fields remain accessible at 360×400. Preferences persist only on Save settings.
+- Pin: native resizable frame, theme-aware background, unchanged image pixels and native close/move controls.
+- Capture: dimmed frozen desktop image, white selection and near-black instruction plate. It remains legible over arbitrary image colors, independently of appearance.
+- Tray: native menu behavior with shared warm-neutral colors and system rendering in high contrast.
+
+## Motion and lifetime
+
+Preview entrance: 180 ms opacity/translation, dismissal: 120 ms. Editor entrance: 180 ms opacity. Hover/press feedback: 80–100 ms, with sustained state colors even under reduced motion. No capture/copy/save waits for animation. Reduced motion eliminates movement.
+
+Preview default: 10 seconds, with up to 20 additional seconds of aggregate passive hover/focus grace. Active holds/drags/copy/save protect the operation. One card shows the latest capture; previous cards do not resurface. Latest remains available in the tray. Dismissal never deletes a saved file.
+
+## Evidence and limits
+
+See `docs/THEME_REVIEW.md` for three audit passes, regression results and remaining desktop checks. Synthetic renders do not establish native HWND appearance, screen-reader usability, physical DPI correctness or production readiness.

@@ -62,8 +62,7 @@ internal sealed class PreviewWindow : Window
         DockPanel.SetDock(close, Dock.Right);
         heading.Children.Add(close);
         var titleRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        FrameworkElement mark = Theme.Glyph("M 1,5 L 1,1 L 5,1 M 11,1 L 15,1 L 15,5 M 15,11 L 15,15 L 11,15 M 5,15 L 1,15 L 1,11", 16);
-        mark.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty,"Accent");
+        FrameworkElement mark = Branding.Mark(18);
         mark.Margin = new Thickness(0, 0, 8, 0);
         titleRow.Children.Add(mark);
         TextBlock title = Theme.Text("Capture ready", 14);

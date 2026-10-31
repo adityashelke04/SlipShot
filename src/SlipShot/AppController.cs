@@ -48,6 +48,7 @@ internal sealed class AppController : IDisposable
     {
         settings=store.Load();Theme.Configure(settings.Appearance,settings.ReducedMotion);
         var menu=new Forms.ContextMenuStrip();
+        menu.Opening+=(_,_)=>Theme.Apply(menu);
         menu.Items.Add("Capture region",null,(_,_)=>Dispatch(()=>_ = CaptureRegionAsync()));
         menu.Items.Add("Edit latest capture",null,(_,_)=>Dispatch(()=> {if(latest is not null) OpenEditor(latest);else Notify("No capture yet. Choose Capture region to begin.");}));
         menu.Items.Add("Show latest preview",null,(_,_)=>Dispatch(ReopenPreview));
@@ -231,7 +232,7 @@ internal sealed class AppController : IDisposable
             if(changedBinding&&hotkeys?.Register(changed.Hotkey)!=true)return "That hotkey is already in use. Try Ctrl+Alt+Q; tray capture remains available.";
             try {store.Save(changed);}
             catch(Exception ex) when(IsExpected(ex)) {if(changedBinding)hotkeys?.Register(settings.Hotkey);return "Preferences could not be written beside the app. Choose a writable portable folder.";}
-            settings=changed;Theme.Configure(settings.Appearance,settings.ReducedMotion);if(tray is not null)tray.Text="SlipShot · "+settings.Hotkey;return null;
+            settings=changed;Theme.Configure(settings.Appearance,settings.ReducedMotion);if(tray is not null){tray.Text="SlipShot · "+settings.Hotkey;if(tray.ContextMenuStrip is not null)Theme.Apply(tray.ContextMenuStrip);}return null;
         });
         preferences.Closed+=(_,_)=>preferences=null;preferences.Show();
     }
@@ -251,7 +252,7 @@ internal sealed class AppController : IDisposable
     }
     private long RetainedBytes() => documents.Values.Select(x=>x.Source).Concat(queue.Items.Select(x=>x.Image)).Concat(latest is null?Array.Empty<BitmapSource>():new[]{latest.Image}).Distinct().Sum(x=>(long)x.PixelWidth*x.PixelHeight*4)+pins.Sum(x=>x.ImageBytes);
     private void DisplaysChanged(object? sender,EventArgs e)=>Dispatch(()=> {captureGate.Cancel();activeCapture?.Cancel();overlay?.Close();suppressAdvance=true;preview?.Close();suppressAdvance=false;queue.Clear();Notify("Display changed. Pending previews were dismissed; the latest image is still available in the tray.");});
-    private void PreferencesChanged(object sender,UserPreferenceChangedEventArgs e)=>Dispatch(()=>Theme.Configure(settings.Appearance,settings.ReducedMotion));
+    private void PreferencesChanged(object sender,UserPreferenceChangedEventArgs e)=>Dispatch(()=>{Theme.Configure(settings.Appearance,settings.ReducedMotion);if(tray?.ContextMenuStrip is not null)Theme.Apply(tray.ContextMenuStrip);});
     private void Dispatch(Action action) {if(!disposed&&!app.Dispatcher.HasShutdownStarted)app.Dispatcher.BeginInvoke(action);}
     private void Notify(string message) {if(!disposed)tray?.ShowBalloonTip(3500,"SlipShot",message,Forms.ToolTipIcon.Info);}
     private static bool IsExpected(Exception ex)=>ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.ComponentModel.Win32Exception or System.Runtime.InteropServices.ExternalException or NotSupportedException or OutOfMemoryException;

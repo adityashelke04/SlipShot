@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.8-preview.1 — 2026-10-31
+
+Selected Frame-S throughout the app, with orange-on-dark and dark-on-light header variants. Completed shared light/dark controls, menus, tooltips, annotation selection and scrollbars; added theme-aware tray rendering and Windows 11 title-bar preference. Refined settings sections and inline validation. Corrected primary hover/pressed/focus contrast and live editor theme updates. Serial synthetic suite: 134 passing tests; 36 software-rendered UI fixtures, including a pixel-matched live theme switch. Native desktop checks remain separate.
+
 ## 0.2.7-preview.1 — 2026-10-31
 
 Moved folder access to a compact footer box beside Latest in tray; restored one primary Edit/Copy/Save/Pin row. Added three ChatGPT-generated identity concepts, exact-color original SVG masters and an audited Frame-S Windows icon at9sizes. Executable/window/tray icon resources now present; UI orange/charcoal palette uses verified brand reference colors with contrast-safe text/focus.125tests pass. Existing screenshots and user data remain untouched.

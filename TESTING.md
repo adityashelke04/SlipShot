@@ -4,6 +4,8 @@ Automated runs use synthetic pixels, fake clipboard sinks, temporary files under
 
 ## Automated evidence
 
+0.2.8: 134 tests pass; 36 synthetic UI renders and a pixel-matched live theme switch. Three audit passes and native limits: [theme review](docs/THEME_REVIEW.md).
+
 0.2.7:125tests passed. Footer tests verify folder action beside retention text, four primary actions and saved/error behavior. Brand tests verify9ICO sizes, transparent corners, exact#D97757/#141413 interiors, cached256px window image and owned32px tray clones. A regression caught16px window decoding and was fixed. Theme tests check normal light/dark palette and text/focus contrast. Native PE resource checks confirm executable icon/icon-group/manifest. Software renders cover20UIstates plus logo size comparisons. Actual Windows shell/tray cache display and high-contrast interaction remain manual checks; no OS cache cleanup performed.
 
 0.2.5 save-once regression:114tests pass. The initial actual-controller test reproduced three PNGs from three unchanged saves, then passed with one. Further tests cover shared preview/editor receipts with independent edits, repeated unshown-preview button clicks becoming disabled Saved, retry after failure, deleted-file recovery, saved undo/redo snapshots, same-capture/cross-capture explicit overwrite invalidation and sibling UI notifications. Twenty synthetic layouts include Saved states. Actual visible dialogs and private capture clicks remain manual acceptance checks; no personal images were used.
@@ -12,7 +14,7 @@ Automated runs use synthetic pixels, fake clipboard sinks, temporary files under
 
 0.2.3 regression pass:102tests passed. New tests cover10second idle/30second passive limit, aggregate hover allowance, active gestures, missed release recovery, fade-independent closure using a real dispatcher and an unshown zero-HWND preview, latest-capture replacement, capture-busy publication guard, and bitmap/PNG copy privacy and pixel identity. No real desktop or clipboard content used. Manually verify two rapid captures, Copy then app-switch, >30second parked hover, active long drag, cancelled capture and capture during fade. These real-input checks remain NOT RUN.
 
-Run `./scripts/build-fallback.ps1 -Test -VisualCheck` or the SDK commands in README. Machine: Windows x64, .NET desktop runtime 8.0.11. Warnings are errors in fallback compilation. Latest exact totals are in `docs/VERIFICATION.md` and `artifacts/tests/TestResult.xml`.
+Run `./scripts/build-fallback.ps1 -Test -VisualCheck` or the SDK commands in README. Machine: Windows x64, .NET desktop runtime 8.0.11. Warnings are errors in fallback compilation. Latest exact totals are in `docs/THEME_REVIEW.md` and `artifacts/tests/TestResult.xml`.
 
 Coverage includes 100/125/150/200% coordinate round trips with negative origins; normalized/tiny/empty/clipped selection; crop pixel dimensions independent of source DPI; drawing pixels for every tool; descending line direction; redaction layering/opacity and PNG reload; text and step contrast; all resize handles; undo/redo/invalidation/saved state; view-model notifications; geometry/input/memory validation; capture cancellation/reentry/stale completion; preview queue bounds/pause/reduced motion and placement; PNG/JPEG encoding/transparency; overwrite/collision/invalid path/write failure; corrupt/unsupported settings; busy/nonbusy/canceled clipboard with thread identity assertions.
 
@@ -61,3 +63,14 @@ New manual checks: drag the thumbnail into Explorer, Paint/an image-aware compos
 5. Pin a capture, capture again to check exclusion, close pin. Exit from tray and confirm icon/hotkey cleanup. Record any failure before attempting gaming/fullscreen testing.
 
 Record observed hardware/DPI/app versions next to completed checks. Mocked/native-policy unit tests do not prove native capture correctness or production readiness.
+## Theme update: 0.2.8-preview.1
+
+See [theme review](docs/THEME_REVIEW.md) for three audit passes. 134 serial synthetic tests pass; 36 offscreen WPF states generated. A dark-to-light editor switch matches a fresh light editor pixel-for-pixel after forced resource replacement. No real desktop screenshot or clipboard content was used.
+
+| New desktop check | Status |
+|---|---|
+| Light/Dark/System change with preview, editor and pin open | NOT RUN |
+| Windows 11 title bar and themed tray menu | NOT RUN |
+| Windows 10 native title-bar fallback | NOT RUN |
+| High contrast and screen-reader behavior | NOT RUN |
+| Real checkbox/dropdown/textbox/scrollbar keyboard and mouse input | NOT RUN |

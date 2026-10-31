@@ -6,7 +6,7 @@ Previously developed under the working name LeftShot. Historical audit records a
 
 A small, local-only Windows screenshot editor. Capture a region, open the bottom-left preview, annotate, and copy or save a flattened image.
 
-**0.2.7-preview.1 — compact footer access and a complete Windows icon.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
+**0.2.8-preview.1 — Frame-S identity and a consistent light/dark interface.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
 
 ## App preview
 
@@ -27,7 +27,7 @@ The real WPF interface, rendered with generated demo content only. **No personal
 
 Windows 10 version 2004 or newer / Windows 11, **x64**, with the **.NET 8 Windows Desktop Runtime**. Keep all files in the portable folder together and run `SlipShot.exe`. It starts in the notification area, without an editor or capture overlay appearing automatically. Default capture shortcut: **Ctrl+Alt+S**. The tray also provides capture, recent-image access, settings and exit. Windows may hide the tray icon in its overflow menu.
 
-Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.7-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
+Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.8-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
 
 All preferences live in `data/settings.json` beside the executable. Put the portable folder in a location you can write. There is no screenshot history or automatic saving on capture. **Save** writes a PNG directly to **F:\SlipShot Captures** on this installation, without a dialog. It then becomes disabled **Saved**. Repeated Save/Ctrl+S for the same capture version does not write another file, including after reopening its editor. An edit enables Save again and exports a new version while preserving the previous file. Undo/redo recognizes versions already saved. Change **Quick-save folder** in Settings. **Save a copy as…** (the arrow beside Save or Ctrl+Shift+S) deliberately creates another copy or chooses JPEG/a different filename. Failed saves keep edits and allow retry; missing files are checked on reopening, activation, preview entry and Save rather than continuously polled. No existing captures are deleted by this fix.
 

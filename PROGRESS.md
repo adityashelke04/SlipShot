@@ -1,5 +1,9 @@
 # Progress
 
+## Latest: 0.2.8-preview.1 application theme
+
+Frame-S confirmed by user. Completed consistent dark/light controls, menus, tray colors, supported title-bar preference, header mark variants, settings layout/validation and live editor resource updates. Three source/design/verification audit passes recorded in docs/THEME_REVIEW.md. 134 tests pass; 36 synthetic WPF fixtures include a pixel-matched dark-to-light switch. No actual desktop capture, clipboard or live app replacement. Latest package/install evidence follows final verification; preserve the running session and unsaved edits.
+
 ## Latest: 0.2.7-preview.1 footer + identity
 
 Usercorrectedfolderplacement tosmallboxbesideLatestintray; implementedsingle4actionrowfootericon withretainedaccessiblecallback. Generated3originalChatGPTlogo boards, copiedprojectassetsF, independentlyaudited. Frame-S selecteddefault; originalSVGexact#D97757/#141413 masters+darkalternatesall3,9frameICO embeddednative+managed,Window.Icon+traywired. ActualmissingresourceandWPF16pxselection testsfailedthenfixed. Contrasttests andall125tests pass;20synthetic UIlayouts andsmalliconcomparisonsinspected. NativeExplorer/traycacheappearance manualchecksremaining. Source/static/privacychecks clear. Packaged0.2.7 andinstalled37verifiedpayloadfilesunderF:/Apps/SlipShot/versions/0.2.7-preview.1;Startmenutargetupdated;normalExit/reopenactivates it. Existingprocessunsavedworkpreserved. No personalimage used forlogo generation orpublicscreenshots. Finalcommit/pushmain recordedinhandoff.

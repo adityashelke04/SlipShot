@@ -7,7 +7,7 @@
     <ApplicationIcon>Assets\slipshot.ico</ApplicationIcon>
     <StartupObject>SlipShot.Program</StartupObject>
     <AssemblyName>SlipShot</AssemblyName>
-    <Version>0.2.7-preview.1</Version>
+    <Version>0.2.8-preview.1</Version>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>

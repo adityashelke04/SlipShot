@@ -73,7 +73,7 @@ internal sealed class SelectionWindow : Window
             string label=Selection.IsEmpty?"Drag a region · Esc cancels · This monitor only\nKeyboard: Space starts, arrows adjust, Enter captures":$"{Math.Ceiling(Selection.Width):0} × {Math.Ceiling(Selection.Height):0} px · Release to capture · Esc cancels";
             var text=new FormattedText(label,CultureInfo.CurrentCulture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),14,Brushes.White,VisualTreeHelper.GetDpi(this).PixelsPerDip);
             double x=Math.Max(12,(ActualWidth-text.Width)/2),y=24;
-            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(240,23,25,29)),null,new Rect(x-12,y-8,text.Width+24,text.Height+16),8,8);
+            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(240,20,20,19)),null,new Rect(x-12,y-8,text.Width+24,text.Height+16),8,8);
             dc.DrawText(text,new Point(x,y));
         }
     }

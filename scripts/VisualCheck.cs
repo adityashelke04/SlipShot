@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -53,6 +55,18 @@ internal static class VisualCheck
             RenderContent(preview,new Size(328,360),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}.png"));
             var settings=new SettingsWindow(new AppSettings(),_=>null);
             RenderContent(settings,new Size(460,660),Path.Combine(output,$"settings-{appearance.ToLowerInvariant()}.png"));
+            var compactSettings=new SettingsWindow(new AppSettings(),_=>null);
+            RenderContent(compactSettings,new Size(360,400),Path.Combine(output,$"settings-{appearance.ToLowerInvariant()}-compact.png"));
+            var invalidSettings=new SettingsWindow(new AppSettings(),_=>null);
+            Descendants(invalidSettings).OfType<TextBox>().Single(b=>System.Windows.Automation.AutomationProperties.GetName(b).StartsWith("Preview duration")).Text="0";
+            Descendants(invalidSettings).OfType<Button>().Single(b=>System.Windows.Automation.AutomationProperties.GetName(b)=="Save settings").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            RenderContent(invalidSettings,new Size(360,400),Path.Combine(output,$"settings-{appearance.ToLowerInvariant()}-error.png"));
+            RenderContent(new PinWindow(sample.Source),new Size(360,260),Path.Combine(output,$"pin-{appearance.ToLowerInvariant()}.png"));
+            RenderContent(new SelectionWindow(sample.Source,monitor),new Size(960,540),Path.Combine(output,$"selection-{appearance.ToLowerInvariant()}.png"));
+            RenderElement(ControlSheet(),new Size(520,490),Path.Combine(output,$"controls-{appearance.ToLowerInvariant()}.png"));
+            var exportMenu=new ContextMenu();exportMenu.Items.Add(new MenuItem {Header="Save a copy as…",InputGestureText="Ctrl+Shift+S"});
+            RenderElement(exportMenu,new Size(340,52),Path.Combine(output,$"menu-{appearance.ToLowerInvariant()}.png"));
+            RenderElement(new ToolTip {Content="Open captures folder"},new Size(200,40),Path.Combine(output,$"tooltip-{appearance.ToLowerInvariant()}.png"));
             foreach(var tool in new[]{ToolKind.Text,ToolKind.Rectangle,ToolKind.Redaction})
             {
                 var contextual=new EditorWindow(SyntheticDocument(),_=>Task.FromResult(false),_=>Task.CompletedTask,_=>{});
@@ -67,17 +81,64 @@ internal static class VisualCheck
             var savedPreview=new PreviewWindow(savedDocument.Source,monitor,10,()=>{},()=>Task.CompletedTask,()=>Task.FromResult(true),()=>{},document:savedDocument,openLocation:()=>{});
             RenderContent(savedPreview,new Size(328,360),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}-saved.png"));
         }
+        configure.Invoke(null,new object[]{"Dark",true});
+        var switchingEditor=new EditorWindow(SyntheticDocument(),_=>Task.FromResult(false),_=>Task.CompletedTask,_=>{});
+        var switchingContent=(FrameworkElement)switchingEditor.Content;switchingContent.DataContext=switchingEditor.DataContext;switchingEditor.Content=null;
+        switchingContent.Resources=Application.Current.Resources; // Detached fixture needs an explicit resource owner.
+        RenderElement(switchingContent,new Size(640,480),Path.Combine(output,"theme-switch-before.png"));
+        // Frozen resources must be replaced; existing controls and retained vector drawings must follow.
+        foreach(var key in Application.Current.Resources.Keys)
+            if(Application.Current.Resources[key] is SolidColorBrush brush && brush.CanFreeze)brush.Freeze();
+        configure.Invoke(null,new object[]{"Light",true});
+        var frame=new System.Windows.Threading.DispatcherFrame();
+        Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle,new Action(()=>frame.Continue=false));
+        System.Windows.Threading.Dispatcher.PushFrame(frame);
+        RenderElement(switchingContent,new Size(640,480),Path.Combine(output,"theme-switch-after.png"));
+        var expected=new BitmapImage(new Uri(Path.Combine(output,"editor-light-640x480.png")));
+        var actual=new BitmapImage(new Uri(Path.Combine(output,"theme-switch-after.png")));
+        byte[] expectedPixels=new byte[640*480*4],actualPixels=new byte[expectedPixels.Length];
+        expected.CopyPixels(expectedPixels,640*4,0);actual.CopyPixels(actualPixels,640*4,0);
+        if(!expectedPixels.SequenceEqual(actualPixels))throw new InvalidOperationException("Live theme switch differs from a freshly created light editor.");
+        switchingContent.Resources=new ResourceDictionary();
+        ((DocumentViewModel)switchingEditor.DataContext).Dispose();
+        Console.WriteLine("Live dark-to-light theme switch matches fresh light editor pixels.");
         // Do not close the unshown editor objects: no native lifetime or close-dialog path is exercised.
         return 0;
     }
 
     private static void RenderContent(Window window,Size size,string path)
     {
-        var content=(FrameworkElement)window.Content;window.Content=null;
+        var content=(FrameworkElement)window.Content;content.DataContext=window.DataContext;window.Content=null;
+        RenderElement(new Border {Child=content,Background=window.Background},size,path);
+    }
+
+    private static void RenderElement(FrameworkElement content,Size size,string path)
+    {
         TextElement.SetFontFamily(content,new FontFamily("Segoe UI"));TextElement.SetFontSize(content,13);
         content.Measure(size);content.Arrange(new Rect(size));content.UpdateLayout();
         var image=new RenderTargetBitmap((int)size.Width,(int)size.Height,96,96,PixelFormats.Pbgra32);image.Render(content);
         var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));using(var stream=File.Create(path))encoder.Save(stream);Console.WriteLine(path);
+    }
+
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    {yield return root;foreach(object child in LogicalTreeHelper.GetChildren(root))if(child is DependencyObject obj)foreach(var item in Descendants(obj))yield return item;}
+
+    private static FrameworkElement ControlSheet()
+    {
+        var body=new StackPanel {Margin=new Thickness(24)};
+        body.Children.Add(Theme.Text("Shared controls · synthetic fixture",18));
+        var buttons=new WrapPanel {Margin=new Thickness(0,16,0,8)};
+        buttons.Children.Add(Theme.Button("Save",()=>{},true));buttons.Children.Add(Theme.Button("Cancel",()=>{}));
+        var disabled=Theme.Button("Saved",()=>{},true);disabled.IsEnabled=false;buttons.Children.Add(disabled);body.Children.Add(buttons);
+        body.Children.Add(new CheckBox {Content="Copy automatically",IsChecked=true});
+        body.Children.Add(new CheckBox {Content="Reduce motion",IsChecked=false});
+        body.Children.Add(new TextBox {Text="F:\\SlipShot Captures",Margin=new Thickness(0,8,0,8)});
+        body.Children.Add(new ComboBox {ItemsSource=new[]{"System","Light","Dark"},SelectedIndex=0});
+        var list=new ListBox {ItemsSource=new[]{"Arrow · annotation selected","Text · note"},SelectedIndex=0,Margin=new Thickness(0,8,0,8)};
+        list.SetResourceReference(Control.BackgroundProperty,"Panel");body.Children.Add(list);
+        body.Children.Add(Theme.Text("Scroll to inspect a zoomed image",12,true));
+        body.Children.Add(new System.Windows.Controls.Primitives.ScrollBar {Orientation=Orientation.Horizontal,Minimum=0,Maximum=100,Value=30,ViewportSize=25});
+        var frame=new Border {Child=body};frame.SetResourceReference(Border.BackgroundProperty,"Surface");return frame;
     }
 
     private static EditDocument SyntheticDocument()

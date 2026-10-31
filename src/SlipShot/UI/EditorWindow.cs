@@ -100,9 +100,11 @@ public sealed class EditorWindow : Window
 
         _surface = new DrawingSurface(this) { Focusable = true, SnapsToDevicePixels = true };
         AutomationProperties.SetName(_surface, "Screenshot editing canvas");
+        var imageBorder = new Border { Child = _surface, Margin = new Thickness(20), BorderThickness = new Thickness(1) };
+        imageBorder.SetResourceReference(Border.BorderBrushProperty, "Border");
         _scroll = new ScrollViewer
         {
-            Content = new Border { Child = _surface, Margin = new Thickness(20), BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(1) },
+            Content = imageBorder,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -117,6 +119,7 @@ public sealed class EditorWindow : Window
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         var identity = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        var brandMark=Branding.Mark(22);brandMark.Margin=new Thickness(0,0,10,0);identity.Children.Add(brandMark);
         var documentIdentity = new StackPanel { MinWidth = 86, Margin = new Thickness(0, 0, 12, 0) };
         var wordmark = Theme.Text("SlipShot", 15);
         wordmark.FontWeight = FontWeights.SemiBold;
@@ -173,11 +176,15 @@ public sealed class EditorWindow : Window
         _saveButton.Margin = new Thickness(0);
         Grid.SetColumn(exports, 2);
         header.Children.Add(exports);
-        var headerBorder = new Border { Child = header, Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 0, 0, 1) };
+        var headerBorder = new Border { Child = header, BorderThickness = new Thickness(0, 0, 0, 1) };
+        headerBorder.SetResourceReference(Border.BackgroundProperty, "Panel");
+        headerBorder.SetResourceReference(Border.BorderBrushProperty, "Border");
         DockPanel.SetDock(headerBorder, Dock.Top);
         root.Children.Add(headerBorder);
 
-        var statusBorder = new Border { Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 1, 0, 0), Padding = new Thickness(16, 7, 16, 7) };
+        var statusBorder = new Border { BorderThickness = new Thickness(0, 1, 0, 0), Padding = new Thickness(16, 7, 16, 7) };
+        statusBorder.SetResourceReference(Border.BackgroundProperty, "Panel");
+        statusBorder.SetResourceReference(Border.BorderBrushProperty, "Border");
         _status.TextTrimming = TextTrimming.CharacterEllipsis;
         _status.TextWrapping = TextWrapping.NoWrap;
         statusBorder.Child = _status;
@@ -224,7 +231,9 @@ public sealed class EditorWindow : Window
             _toolButtons.Add(kind, button);
         }
         rail.Children.Add(new ScrollViewer { Content = tools, VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Focusable = false });
-        var railBorder = new Border { Child = rail, Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 0, 1, 0) };
+        var railBorder = new Border { Child = rail, BorderThickness = new Thickness(0, 0, 1, 0) };
+        railBorder.SetResourceReference(Border.BackgroundProperty, "Panel");
+        railBorder.SetResourceReference(Border.BorderBrushProperty, "Border");
         DockPanel.SetDock(railBorder, Dock.Left);
         root.Children.Add(railBorder);
 
@@ -255,7 +264,9 @@ public sealed class EditorWindow : Window
             button.BorderBrush = Brushes.Transparent;
             button.ToolTip = "Use " + swatch;
             button.Tag = color;
-            button.Content = new Border { Background = new SolidColorBrush(color), BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(1), Width = 16, Height = 16, CornerRadius = new CornerRadius(3) };
+            var swatchBorder = new Border { Background = new SolidColorBrush(color), BorderThickness = new Thickness(1), Width = 16, Height = 16, CornerRadius = new CornerRadius(3) };
+            swatchBorder.SetResourceReference(Border.BorderBrushProperty, "Border");
+            button.Content = swatchBorder;
             AutomationProperties.SetName(button, "Color " + swatch);
             _colorButtons.Add(button);
             _colorOptions.Children.Add(button);
@@ -278,7 +289,7 @@ public sealed class EditorWindow : Window
         };
         _strokeOptions.Children.Add(_stroke);
         properties.Children.Add(_strokeOptions);
-        _fill.Foreground = Theme.TextBrush;
+        _fill.SetResourceReference(Control.ForegroundProperty, "Ink");
         _fill.Checked += (_, _) => ApplyFill();
         _fill.Unchecked += (_, _) => ApplyFill();
         properties.Children.Add(_fill);
@@ -305,7 +316,9 @@ public sealed class EditorWindow : Window
         properties.Children.Add(_deleteButton);
         _resetCrop = AddButton(properties, "Reset crop", () => { CancelGesture(); Commit(new DocumentState(ImageBounds, _document.State.Annotations)); }, "Restore the full image bounds");
         _resetCrop.Padding = new Thickness(10, 4, 10, 4);
-        var propertyBorder = new Border { Child = properties, Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(0, 0, 0, 1) };
+        var propertyBorder = new Border { Child = properties, BorderThickness = new Thickness(0, 0, 0, 1) };
+        propertyBorder.SetResourceReference(Border.BackgroundProperty, "Panel");
+        propertyBorder.SetResourceReference(Border.BorderBrushProperty, "Border");
         DockPanel.SetDock(propertyBorder, Dock.Top);
         imageArea.Children.Add(propertyBorder);
         imageArea.Children.Add(_scroll);
@@ -327,8 +340,8 @@ public sealed class EditorWindow : Window
         _layerHint.Margin = new Thickness(4, 8, 4, 8);
         DockPanel.SetDock(_layerHint, Dock.Top);
         sidebar.Children.Add(_layerHint);
-        _layers.Background = Theme.PanelBrush;
-        _layers.Foreground = Theme.TextBrush;
+        _layers.SetResourceReference(Control.BackgroundProperty, "Panel");
+        _layers.SetResourceReference(Control.ForegroundProperty, "Ink");
         _layers.BorderThickness = new Thickness(0);
         _layers.HorizontalContentAlignment = HorizontalAlignment.Stretch;
         ScrollViewer.SetHorizontalScrollBarVisibility(_layers, ScrollBarVisibility.Disabled);
@@ -343,7 +356,9 @@ public sealed class EditorWindow : Window
         };
         AutomationProperties.SetName(_layers, "Annotations, topmost first");
         sidebar.Children.Add(_layers);
-        _sidebarBorder = new Border { Child = sidebar, Background = Theme.PanelBrush, BorderBrush = Theme.BorderBrush, BorderThickness = new Thickness(1, 0, 0, 0) };
+        _sidebarBorder = new Border { Child = sidebar, BorderThickness = new Thickness(1, 0, 0, 0) };
+        _sidebarBorder.SetResourceReference(Border.BackgroundProperty, "Panel");
+        _sidebarBorder.SetResourceReference(Border.BorderBrushProperty, "Border");
         Grid.SetColumn(_sidebarBorder, 1);
         workspace.Children.Add(_sidebarBorder);
         root.Children.Add(workspace);
@@ -411,9 +426,9 @@ public sealed class EditorWindow : Window
         control.Margin = new Thickness(0, 2, 6, 2);
         control.Padding = new Thickness(6, 4, 6, 4);
         control.VerticalContentAlignment = VerticalAlignment.Center;
-        control.Background = Theme.BackgroundBrush;
-        control.Foreground = Theme.TextBrush;
-        control.BorderBrush = Theme.BorderBrush;
+        control.SetResourceReference(Control.BackgroundProperty, "Surface");
+        control.SetResourceReference(Control.ForegroundProperty, "Ink");
+        control.SetResourceReference(Control.BorderBrushProperty, "ControlBorder");
         AutomationProperties.SetName(control, name);
     }
 
@@ -526,14 +541,20 @@ public sealed class EditorWindow : Window
         if (kind == ToolKind.Redaction) _hex.Text = "#000000";
         foreach (var pair in _toolButtons)
         {
-            pair.Value.BorderBrush = pair.Key == _tool ? Theme.FocusBrush : Brushes.Transparent;
-            if (pair.Key == _tool) pair.Value.SetResourceReference(Control.BackgroundProperty, "Selected");
-            else pair.Value.Background = Brushes.Transparent;
+            if (pair.Key == _tool)
+            {
+                pair.Value.SetResourceReference(Control.BorderBrushProperty, "Focus");
+                pair.Value.SetResourceReference(Control.BackgroundProperty, "Selected");
+            }
+            else { pair.Value.BorderBrush = Brushes.Transparent; pair.Value.Background = Brushes.Transparent; }
             pair.Value.BorderThickness = new Thickness(1);
             AutomationProperties.SetHelpText(pair.Value, pair.Key == _tool ? "Selected tool" : "");
         }
         foreach (var button in _colorButtons)
-            button.BorderBrush = button.Tag is Color color && color == _color ? Theme.FocusBrush : Brushes.Transparent;
+        {
+            if (button.Tag is Color color && color == _color) button.SetResourceReference(Control.BorderBrushProperty, "Focus");
+            else button.BorderBrush = Brushes.Transparent;
+        }
         _surface.Cursor = _tool switch { ToolKind.Pan => Cursors.Hand, ToolKind.Select => Cursors.Arrow, ToolKind.Text => Cursors.IBeam, _ => Cursors.Cross };
         _syncing = false;
     }
@@ -552,10 +573,10 @@ public sealed class EditorWindow : Window
         if (value.Length != 6 || !uint.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint rgb))
         {
             _status.Text = "Enter a color as six hexadecimal digits, for example #E64340.";
-            _hex.BorderBrush = Brushes.IndianRed;
+            _hex.SetResourceReference(Control.BorderBrushProperty,"Error");
             return;
         }
-        _hex.BorderBrush = Theme.BorderBrush;
+        _hex.SetResourceReference(Control.BorderBrushProperty, "ControlBorder");
         SetColor(Color.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb));
     }
 
@@ -1056,8 +1077,16 @@ public sealed class EditorWindow : Window
 
     private sealed class DrawingSurface : FrameworkElement
     {
+        // Resource replacements must invalidate retained drawing commands as well as ordinary controls.
+        private static readonly DependencyProperty AccentProperty = DependencyProperty.Register("Accent", typeof(Brush), typeof(DrawingSurface), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+        private static readonly DependencyProperty PanelProperty = DependencyProperty.Register("Panel", typeof(Brush), typeof(DrawingSurface), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
         private readonly EditorWindow _owner;
-        public DrawingSurface(EditorWindow owner) => _owner = owner;
+        public DrawingSurface(EditorWindow owner)
+        {
+            _owner = owner;
+            SetResourceReference(AccentProperty, "Accent");
+            SetResourceReference(PanelProperty, "Panel");
+        }
         protected override void OnRender(DrawingContext dc)
         {
             base.OnRender(dc);
@@ -1096,8 +1125,13 @@ public sealed class EditorWindow : Window
     /// <summary>Small authored geometry icons; labels carry the accessible names.</summary>
     private sealed class ToolIcon : FrameworkElement
     {
+        private static readonly DependencyProperty InkProperty = DependencyProperty.Register("Ink", typeof(Brush), typeof(ToolIcon), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
         private readonly ToolKind _kind;
-        public ToolIcon(ToolKind kind) => _kind = kind;
+        public ToolIcon(ToolKind kind)
+        {
+            _kind = kind;
+            SetResourceReference(InkProperty, "Ink");
+        }
         protected override void OnRender(DrawingContext dc)
         {
             var pen = new Pen(Theme.TextBrush, 1.4) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
