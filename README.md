@@ -61,7 +61,7 @@ Capture alone does **not** change the clipboard unless you enable automatic copy
 
 ## Build and test with an SDK
 
-This machine had the .NET 8.0.11 desktop runtime but **no SDK**. No SDK was installed. A supported .NET 8 SDK is the normal prerequisite for these commands; the SDK build itself has not been run here. Use a currently serviced runtime patch on your machine; 8.0.11 is not current. .NET 8 support ends November 10, 2026; migrating the target is a follow-up before a long-lived public release. See [Microsoft's support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).
+Use a supported .NET 8 SDK for these commands. The [Windows CI build](https://github.com/adityashelke04/SlipShot/actions/workflows/windows.yml) verifies SDK restore/build and 134 serial synthetic tests. This development machine has the .NET 8.0.11 desktop runtime and no SDK; its separate fallback validation is described below. Use a currently serviced runtime patch on your machine; 8.0.11 is not current. .NET 8 support ends November 10, 2026; migrating the target is a follow-up before a long-lived public release. See [Microsoft's support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).
 
 From PowerShell in this repository:
 

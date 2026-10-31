@@ -1,5 +1,9 @@
 # Progress
 
+## Public source preview — 2026-10-31
+
+User authorized public conversion after review. Frame-S light/dark README headers, brand kit, contribution/security guidance and pinned Windows CI added. Local 134 tests pass; GitHub SDK build on 22f6a29 passed with 0 warnings/errors and all 134 tests. Strict SDK analysis exposed a missing SupportedOSPlatform assembly attribute; restored the net8.0-windows annotation without suppressing diagnostics. Source/history privacy and independent review found no publication blocker. GitHub visibility verified PUBLIC; private vulnerability reporting enabled. Evidence: docs/PUBLICATION_REVIEW.md. No public binary upload or live app interaction; native acceptance remains deferred.
+
 ## Latest: 0.2.8-preview.1 application theme
 
 Frame-S confirmed by user. Completed consistent dark/light controls, menus, tray colors, supported title-bar preference, header mark variants, settings layout/validation and live editor resource updates. Three source/design/verification audit passes recorded in docs/THEME_REVIEW.md. 134 tests pass; 36 synthetic WPF fixtures include a pixel-matched dark-to-light switch. No actual desktop capture, clipboard or live app replacement. Packaged and installed at F:/Apps/SlipShot/versions/0.2.8-preview.1, with 38 payload hashes verified and Start menu redirected. Running 0.2.7 preserved: normal tray Exit/reopen required. Evidence/sizes in docs/VERIFICATION_0.2.8.md. Implementation commit b03a633; final evidence commit/push follows.
