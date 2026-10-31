@@ -1,6 +1,10 @@
-# SlipShot
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/branding/slipshot-dark.svg" />
+  <img src="docs/branding/slipshot-light.svg" alt="SlipShot" width="340" height="88" />
+</picture>
 
-<img src="src/SlipShot/Assets/frame-s.svg" alt="SlipShot Frame-S logo" width="64" height="64" />
+[![Windows build and tests](https://github.com/adityashelke04/SlipShot/actions/workflows/windows.yml/badge.svg)](https://github.com/adityashelke04/SlipShot/actions/workflows/windows.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-D97757)](LICENSE)
 
 Previously developed under the working name LeftShot. Historical audit records and older releases retain that name; current code and builds use SlipShot.
 
@@ -49,7 +53,7 @@ Drag handoff uses standard Windows FileDrop, Bitmap and PNG formats. A terminal 
 
 Accepted drag files survive app exit for late target reads. Owned files older than24hours are cleaned only on a later explicit drag; they are not guaranteed to disappear at24hours. Retention is capped at32files/256MiB; on capacity, use Copy or Save rather than silently evicting recent handoffs. Canceled/interrupted transfers delete their own temporary file where filesystem permissions allow. These temporary files contain only flattened exported pixels. Ordinary captures still create no file.
 
-GitHub repository setup is private with origin/main tracking. Use `./scripts/check-publish.ps1 -CheckRemote` then `git push`. See [publishing notes](docs/PUBLISHING.md); do not change visibility without an explicit decision.
+SlipShot is an open-source preview with `main` tracking `origin/main`. See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), and [publishing notes](docs/PUBLISHING.md). Desktop acceptance remains ongoing; this is not a stable production release.
 
 Only the newest capture is shown: a successful second capture replaces the first card and its actions. Older cards do not resurface on timeout. Canceling capture retains the prior card if it has not already expired. The latest capture remains in the tray until replaced, forgotten or exit. Dismissal never deletes saved files. Three editors and three pins are allowed, subject to the image-memory budget. **Forget in-memory previews** leaves editors and pins intact.
 

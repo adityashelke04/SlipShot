@@ -1,0 +1,34 @@
+name: Windows build and tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore SlipShot.sln --disable-parallel
+      - name: Build
+        run: dotnet build SlipShot.sln -c Release --no-restore -m:1 -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true
+      - name: Synthetic tests only
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/tests | Out-Null
+          dotnet run --project tests/SlipShot.Tests -c Release --no-build -- --workers=0 --work=artifacts/tests --result=TestResult.xml
+      - name: Repository privacy guard
+        run: python scripts/repo-privacy-check.py

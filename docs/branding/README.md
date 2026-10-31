@@ -1,4 +1,6 @@
-# SlipShot identity concepts
+# SlipShot brand kit
+
+Frame-S is the user-approved identity. Use the [light header](slipshot-light.svg) or [dark header](slipshot-dark.svg) for repository documentation, and the production vectors/ICO for the app. The headers use system-font text without embedding a font. Alternate concepts below are retained as design history.
 
 Three original concept boards were generated with ChatGPT's built-in image-generation tool on2026-10-31. Prompts contained only the product brief and palette; no user screenshots or personal content were supplied to generation. Boards are preserved unchanged. Canonical SVGs are simplified original geometric interpretations, not raster edits.
 
