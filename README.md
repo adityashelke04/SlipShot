@@ -10,7 +10,7 @@ Previously developed under the working name LeftShot. Historical audit records a
 
 A small, local-only Windows screenshot editor. Capture a region, open the bottom-left preview, annotate, and copy or save a flattened image.
 
-[Visit the SlipShot website](https://slipshot-tawny.vercel.app/) for an interactive workflow preview and feature comparison.
+[Visit the SlipShot website](https://slipshot-app.vercel.app/) for an interactive workflow preview and feature comparison.
 
 **0.2.8-preview.1 — Frame-S identity and a consistent light/dark interface.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
 
