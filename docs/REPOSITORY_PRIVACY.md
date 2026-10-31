@@ -1,5 +1,7 @@
 # Repository privacy review
 
+The review below is historical. On 2026-10-31 the user explicitly authorized making the repository public after review. The publication pass checks all reachable history, approved image provenance and current staged files; normal Git authorship metadata is included in the public history. See PUBLICATION_REVIEW.md for current evidence. Personal captures and runtime data remain excluded.
+
 Reviewed2026-10-30 for the requested README screenshots and repository handoff.
 
 ## What was added
@@ -12,7 +14,7 @@ Three generated previews under `docs/images`: actual WPF editor in light/dark an
 - No prohibited runtime/generated paths, unapproved screenshot/image paths, binaries, credential-file paths or selected credential signatures found. The script checks private-key headers, GitHub tokens, AWS access-key IDs and Slack tokens, and reports rule names/paths without printing candidate secret values.
 - Verified that artifacts, temporary research data, runtime `data/` folders, `.env` files, signing keys, binaries and unrelated image formats are ignored. Only the three named synthetic PNG paths are exceptions.
 - Source/render build succeeded. No application behavior changed in this documentation pass; the preceding functional suite passed87tests. Native acceptance limitations remain in TESTING.md.
-- GitHub remains PRIVATE. Only explicitly staged source/docs/synthetic images are pushed. Local personal captures and builds are not uploaded. No Git history was rewritten and no user files were deleted.
+- At that review GitHub remained PRIVATE. Only explicitly staged source/docs/synthetic images were pushed. Local personal captures and builds were not uploaded. No Git history was rewritten and no user files were deleted.
 
 ## Boundaries
 
