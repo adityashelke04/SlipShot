@@ -37,3 +37,6 @@ TestResults/
 !docs/branding/concepts/frame-s.png
 !docs/branding/concepts/lifted-slip.png
 !docs/branding/concepts/open-shutter.png
+# Standalone private website checkout; never publish it with the Windows app.
+/website/
+/.impeccable/

@@ -26,7 +26,8 @@ def forbidden(path):
     parts = pathlib.PurePosixPath(path).parts
     name = parts[-1].lower() if parts else ''
     suffix = pathlib.PurePosixPath(path).suffix.lower()
-    return (any(p.lower() in {'.cache', '.tmp', '.firecrawl', 'artifacts', 'bin', 'obj', 'data', 'testresults'} for p in parts)
+    return ((bool(parts) and parts[0].lower() == 'website')
+            or any(p.lower() in {'.cache', '.tmp', '.firecrawl', 'artifacts', 'bin', 'obj', 'data', 'testresults', '.vercel', 'node_modules'} for p in parts)
             or (name.startswith('.env') and name != '.env.example')
             or name == 'settings.json'
             or suffix in {'.exe', '.dll', '.pdb', '.nupkg', '.pfx', '.p12', '.key', '.zip'}

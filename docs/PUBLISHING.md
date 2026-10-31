@@ -8,6 +8,8 @@ The user subsequently requested main. Current development/default branch is **ma
 
 Normal workflow from this repository:
 
+The promotional website is maintained independently. A local `website/` checkout is ignored by this public application repository. Do not force-add it or publish website source in this repository's branches. The publish preflight runs the privacy guard, which rejects website paths in tracked files and reachable Git history, along with credentials and generated output. Website hosting and deployment configuration belong to its separate source repository.
+
 ```powershell
 ./scripts/check-publish.ps1 -CheckRemote
 git status

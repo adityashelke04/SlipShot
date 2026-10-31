@@ -16,4 +16,6 @@ if($CheckRemote){
     git ls-remote --exit-code origin "refs/heads/$branch"
     if($LASTEXITCODE -ne 0){throw 'Remote branch cannot be read. Check URL, GitHub authentication and repository permissions.'}
 }
-Write-Output 'Publish setup is ready. Use git push for subsequent commits. This check changes no Git or account settings.'
+python (Join-Path $PSScriptRoot 'repo-privacy-check.py')
+if($LASTEXITCODE -ne 0){throw 'Repository privacy check failed. Resolve private/generated files before publishing.'}
+Write-Output 'Publish setup and repository privacy checks passed. Use git push for subsequent commits. This check changes no Git or account settings.'
