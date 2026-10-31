@@ -2,7 +2,7 @@
 
 ## Latest: 0.2.8-preview.1 application theme
 
-Frame-S confirmed by user. Completed consistent dark/light controls, menus, tray colors, supported title-bar preference, header mark variants, settings layout/validation and live editor resource updates. Three source/design/verification audit passes recorded in docs/THEME_REVIEW.md. 134 tests pass; 36 synthetic WPF fixtures include a pixel-matched dark-to-light switch. No actual desktop capture, clipboard or live app replacement. Latest package/install evidence follows final verification; preserve the running session and unsaved edits.
+Frame-S confirmed by user. Completed consistent dark/light controls, menus, tray colors, supported title-bar preference, header mark variants, settings layout/validation and live editor resource updates. Three source/design/verification audit passes recorded in docs/THEME_REVIEW.md. 134 tests pass; 36 synthetic WPF fixtures include a pixel-matched dark-to-light switch. No actual desktop capture, clipboard or live app replacement. Packaged and installed at F:/Apps/SlipShot/versions/0.2.8-preview.1, with 38 payload hashes verified and Start menu redirected. Running 0.2.7 preserved: normal tray Exit/reopen required. Evidence/sizes in docs/VERIFICATION_0.2.8.md. Implementation commit b03a633; final evidence commit/push follows.
 
 ## Latest: 0.2.7-preview.1 footer + identity
 
