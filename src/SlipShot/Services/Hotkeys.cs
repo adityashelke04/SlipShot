@@ -9,6 +9,7 @@ internal sealed class Hotkeys : IDisposable
 {
     private readonly HwndSource source;
     private int activeId;
+    private uint activeModifiers, activeKey;
     private int nextId = 10;
     internal event Action? Invoked;
     internal Hotkeys()
@@ -19,10 +20,13 @@ internal sealed class Hotkeys : IDisposable
     internal bool Register(string text)
     {
         if (!TryParse(text,out var modifiers,out var key)) return false;
+        if (activeId != 0 && modifiers == activeModifiers && key == activeKey) return true;
         int proposed = ++nextId;
         if (!Native.RegisterHotKey(source.Handle,proposed,modifiers|0x4000,key)) return false;
         if (activeId != 0) Native.UnregisterHotKey(source.Handle,activeId);
         activeId = proposed;
+        activeModifiers = modifiers;
+        activeKey = key;
         return true;
     }
     internal static bool TryParse(string text, out uint modifiers, out uint key)
@@ -41,7 +45,7 @@ internal sealed class Hotkeys : IDisposable
         string keyName=parts[^1];
         if(!Enum.TryParse<Key>(keyName,true,out var parsed))return false;
         bool letter=keyName.Length==1 && parsed>=Key.A && parsed<=Key.Z && char.IsAsciiLetter(keyName[0]);
-        bool function=keyName.StartsWith("F",StringComparison.OrdinalIgnoreCase) && parsed>=Key.F1 && parsed<=Key.F24;
+        bool function=parsed>=Key.F1 && parsed<=Key.F24 && keyName.Equals(parsed.ToString(),StringComparison.OrdinalIgnoreCase);
         if(!letter&&!function)return false;
         key=(uint)KeyInterop.VirtualKeyFromKey(parsed);
         return true;

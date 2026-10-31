@@ -1,5 +1,7 @@
 # Verification record and desktop matrix
 
+2026-10-31 bug review: 149 automatic tests pass, with one native hotkey test explicitly opt-in; 36 offscreen UI renders and the theme-switch comparison pass. Eight confirmed bugs were fixed, including the folder-action dismissal path found during final review. See [application audit](docs/AUDIT_4.md) for before/after behavior, regression evidence and remaining release checks.
+
 Automated runs use synthetic pixels, fake clipboard sinks, temporary files under the test output, and serial NUnit STA execution. No capture overlay, production hotkey, real clipboard write or user-desktop screenshot was performed. Native desktop tests are **NOT RUN**.
 
 ## Automated evidence

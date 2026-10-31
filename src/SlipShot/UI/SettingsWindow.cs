@@ -72,7 +72,7 @@ internal sealed class SettingsWindow : Window
             if(!Hotkeys.TryParse(hotkey.Text,out _,out _)) {Failure("Choose modifiers plus a letter, for example Ctrl+Alt+S.",hotkey);return;}
             if(!int.TryParse(timeout.Text,out int seconds)||seconds<2||seconds>60) {Failure("Preview duration must be 2–60 seconds.",timeout);return;}
             if(!int.TryParse(quality.Text,out int jpeg)||jpeg<1||jpeg>100) {Failure("JPEG quality must be 1–100.",quality);return;}
-            if(background.Text.Length!=7 || background.Text[0]!='#' || !int.TryParse(background.Text.AsSpan(1),System.Globalization.NumberStyles.HexNumber,null,out _)) {Failure("Choose an opaque background as #RRGGBB.",background);return;}
+            if(background.Text.Length!=7 || background.Text[0]!='#' || !int.TryParse(background.Text.AsSpan(1),System.Globalization.NumberStyles.AllowHexSpecifier,null,out _)) {Failure("Choose an opaque background as #RRGGBB.",background);return;}
             if(!string.IsNullOrWhiteSpace(folder.Text))
             {
                 try {if(!Path.IsPathFullyQualified(folder.Text)||folder.Text.IndexOfAny(Path.GetInvalidPathChars())>=0)throw new ArgumentException();Path.GetFullPath(folder.Text);}

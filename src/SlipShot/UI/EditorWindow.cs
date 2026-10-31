@@ -570,7 +570,7 @@ public sealed class EditorWindow : Window
     {
         if (_syncing) return;
         string value = _hex.Text.Trim().TrimStart('#');
-        if (value.Length != 6 || !uint.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint rgb))
+        if (value.Length != 6 || !uint.TryParse(value, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out uint rgb))
         {
             _status.Text = "Enter a color as six hexadecimal digits, for example #E64340.";
             _hex.SetResourceReference(Control.BorderBrushProperty,"Error");
@@ -854,6 +854,9 @@ public sealed class EditorWindow : Window
     private int HandleAt(Rect bounds, Point point)
     {
         var handles = Handles(bounds);
+        // Flat strokes overlap corner handles; let their far endpoint grow into a diagonal.
+        if ((bounds.Width == 0 || bounds.Height == 0)
+            && Math.Abs(handles[4].X - point.X) <= 6 / _zoom && Math.Abs(handles[4].Y - point.Y) <= 6 / _zoom) return 4;
         for (int i = 0; i < handles.Length; i++)
             if (Math.Abs(handles[i].X - point.X) <= 6 / _zoom && Math.Abs(handles[i].Y - point.Y) <= 6 / _zoom) return i;
         return -1;

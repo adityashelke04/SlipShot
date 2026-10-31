@@ -136,7 +136,7 @@ internal sealed class PreviewWindow : Window
                 try {openLocation();hint.Text="Capture folder opened";}
                 catch(Exception error) when(error is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
                 {hint.Text="Folder unavailable · check Settings";hint.ToolTip=error.Message;}
-                lifetime=new PreviewLifetime(previewDuration);clock.Restart();
+                if(!lifetime.IsDismissing){lifetime=new PreviewLifetime(previewDuration);clock.Restart();}
             }, size: 28);
             folderButton.Margin = new Thickness(8, 0, 0, 0);
             folderButton.SetResourceReference(Control.BorderBrushProperty, "Border");
@@ -238,7 +238,7 @@ internal sealed class PreviewWindow : Window
             saving=true;UpdateSaveState();hint.Text="Saving image…";
             try {savedHere=await save();hint.Text=savedHere?"Saved to your capture folder":"Not saved · try again";}
             catch(Exception error){hint.Text="Save failed · try again";hint.ToolTip=error.Message;}
-            finally {saving=false;UpdateSaveState();lifetime=new PreviewLifetime(previewDuration);clock.Restart();}
+            finally {saving=false;UpdateSaveState();if(!lifetime.IsDismissing){lifetime=new PreviewLifetime(previewDuration);clock.Restart();}}
         }
 
         async Task CopyImageAsync()
@@ -246,7 +246,7 @@ internal sealed class PreviewWindow : Window
             if(copying)return;copying=true;copyButton!.IsEnabled=false;hint.Text="Copying image…";
             try {await copy();hint.Text="Copied · Ctrl+V to paste";}
             catch(Exception error) {hint.Text="Copy failed · try again";hint.ToolTip=error.Message;}
-            finally {copying=false;copyButton.IsEnabled=true;lifetime=new PreviewLifetime(previewDuration);clock.Restart();}
+            finally {copying=false;copyButton.IsEnabled=true;if(!lifetime.IsDismissing){lifetime=new PreviewLifetime(previewDuration);clock.Restart();}}
         }
 
         Button AddAction(string label, string path, Action action, bool primary = false)

@@ -53,12 +53,32 @@ public static class GeometryUtil
         if (annotation.Kind is ToolKind.Line or ToolKind.Arrow or ToolKind.Pen or ToolKind.Highlighter)
         {
             var points = annotation.Points;
+            if (annotation.Kind == ToolKind.Arrow)
+            {
+                Point start = points is { Count: > 0 } ? points[0] : annotation.Bounds.TopLeft;
+                Point end = points is { Count: > 1 } ? points[^1] : annotation.Bounds.BottomRight;
+                Vector direction = end - start;
+                if (direction.Length > 0)
+                {
+                    direction.Normalize();
+                    Vector offset = point - end;
+                    double behind = -Vector.Multiply(offset, direction);
+                    double across = Math.Abs(Vector.CrossProduct(offset, direction));
+                    if (behind >= 0 && behind <= Math.Max(12, annotation.StrokeWidth * 3)
+                        && across <= behind * 0.45) return true;
+                }
+            }
             if (points is null || points.Count == 0)
                 return SegmentDistance(point, annotation.Bounds.TopLeft, annotation.Bounds.BottomRight) <= radius;
             if (points.Count == 1) return (point - points[0]).Length <= radius;
             for (int i = 1; i < points.Count; i++)
                 if (SegmentDistance(point, points[i - 1], points[i]) <= radius) return true;
             return false;
+        }
+        if (annotation.Kind == ToolKind.Step)
+        {
+            Point center = new(annotation.Bounds.X + annotation.Bounds.Width / 2, annotation.Bounds.Y + annotation.Bounds.Height / 2);
+            return (point - center).Length <= Math.Max(10, Math.Min(annotation.Bounds.Width, annotation.Bounds.Height) / 2) + Math.Max(0, tolerance);
         }
         Rect bounds = annotation.Bounds;
         bounds.Inflate(radius, radius);
@@ -104,8 +124,12 @@ public static class GeometryUtil
         {
             Bounds = bounds,
             Points = annotation.Points?.Select(point => new Point(
-                bounds.X + (old.Width == 0 ? 0 : (point.X - old.X) * bounds.Width / old.Width),
-                bounds.Y + (old.Height == 0 ? 0 : (point.Y - old.Y) * bounds.Height / old.Height))).ToArray()
+                bounds.X + (old.Width == 0
+                    ? old.Height == 0 ? 0 : (point.Y - old.Y) * bounds.Width / old.Height
+                    : (point.X - old.X) * bounds.Width / old.Width),
+                bounds.Y + (old.Height == 0
+                    ? old.Width == 0 ? 0 : (point.X - old.X) * bounds.Height / old.Width
+                    : (point.Y - old.Y) * bounds.Height / old.Height))).ToArray()
         };
     }
 }
