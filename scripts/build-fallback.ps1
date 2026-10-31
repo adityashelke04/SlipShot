@@ -17,14 +17,29 @@ $refs = @(Get-ChildItem $runtime.FullName,$desktop.FullName -Filter *.dll | Wher
 $sources = @(Get-ChildItem "$repo/src/SlipShot" -Filter *.cs -Recurse | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
 if ($CoreOnly) { $sources = @($sources | Where-Object { $_.FullName -match '[\\/]Core[\\/]' }) }
 $options = @('-nologo','-nullable:enable','-langversion:12','-platform:x64','-optimize+','-deterministic+','-warnaserror+')
+$rsp = Join-Path $repo '.tmp/app.rsp'
+$config = '{"runtimeOptions":{"tfm":"net8.0","framework":{"name":"Microsoft.WindowsDesktop.App","version":"8.0.0"}}}'
+if (!$CoreOnly) {
+    $buildTools = Join-Path $repo '.tmp/build-tools'
+    New-Item -ItemType Directory -Force $buildTools | Out-Null
+    $response = $options + '-target:exe' + ('-out:"' + "$buildTools/BuildBrandAssets.dll" + '"') + $refs + ('"' + "$PSScriptRoot/BuildBrandAssets.cs" + '"')
+    [IO.File]::WriteAllLines($rsp,$response)
+    & dotnet $compiler "@$rsp"
+    if ($LASTEXITCODE -ne 0) { throw 'Brand asset helper compilation failed.' }
+    [IO.File]::WriteAllText("$buildTools/BuildBrandAssets.runtimeconfig.json",$config)
+    & dotnet "$buildTools/BuildBrandAssets.dll" $repo
+    if ($LASTEXITCODE -ne 0) { throw 'Brand asset generation failed.' }
+}
 $target = if ($CoreOnly) { '-target:library' } else { '-target:winexe' }
 $response = $options + $target + ('-out:"' + "$out/SlipShot.dll" + '"') + $refs + @($sources | ForEach-Object { '"' + $_.FullName + '"' })
-if (!$CoreOnly) { $response += '-win32manifest:"' + "$repo/src/SlipShot/app.manifest" + '"' }
-$rsp = Join-Path $repo '.tmp/app.rsp'
+if (!$CoreOnly) {
+    $response += '-win32manifest:"' + "$repo/src/SlipShot/app.manifest" + '"'
+    $response += '-win32icon:"' + "$repo/src/SlipShot/Assets/slipshot.ico" + '"'
+    $response += '-resource:"' + "$repo/src/SlipShot/Assets/slipshot.ico" + '",SlipShot.Assets.slipshot.ico'
+}
 [IO.File]::WriteAllLines($rsp,$response)
 & dotnet $compiler "@$rsp"
 if ($LASTEXITCODE -ne 0) { throw 'Application compilation failed.' }
-$config = '{"runtimeOptions":{"tfm":"net8.0","framework":{"name":"Microsoft.WindowsDesktop.App","version":"8.0.0"}}}'
 [IO.File]::WriteAllText("$out/SlipShot.runtimeconfig.json",$config)
 if (!$CoreOnly) {
     $buildTools = Join-Path $repo '.tmp/build-tools'

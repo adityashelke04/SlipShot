@@ -1,5 +1,9 @@
 # Progress
 
+## Latest: 0.2.7-preview.1 footer + identity
+
+Usercorrectedfolderplacement tosmallboxbesideLatestintray; implementedsingle4actionrowfootericon withretainedaccessiblecallback. Generated3originalChatGPTlogo boards, copiedprojectassetsF, independentlyaudited. Frame-S selecteddefault; originalSVGexact#D97757/#141413 masters+darkalternatesall3,9frameICO embeddednative+managed,Window.Icon+traywired. ActualmissingresourceandWPF16pxselection testsfailedthenfixed. Contrasttests andall125tests pass;20synthetic UIlayouts andsmalliconcomparisonsinspected. NativeExplorer/traycacheappearance manualchecksremaining. Source/static/privacychecks clear. Packaged0.2.7 andinstalled37verifiedpayloadfilesunderF:/Apps/SlipShot/versions/0.2.7-preview.1;Startmenutargetupdated;normalExit/reopenactivates it. Existingprocessunsavedworkpreserved. No personalimage used forlogo generation orpublicscreenshots. Finalcommit/pushmain recordedinhandoff.
+
 ## Latest: 0.2.6-preview.1 folder action
 
 Added Open file location next to Edit in preview; configured SaveDirectory/defaultF:/SlipShot Captures resolved on click. Fixed Windows Explorer executable + one argument, folder validated/created beforelaunch; tests inject callback/build request only, no Explorerlaunch/personalimageaccess. Existingiconunchanged asuserrequestedapprovalbeforegeneration; confirmedChatGPTimagegenerationavailable. Reviewfoundonlyruntime traymark configured, noApplicationIcon/Window.Icon asset; iconworkpendingapproval.120tests passed; dark/lightSaved preview layouts inspected; evidence docs/FOLDER_ACTION_REVIEW.md. Newinstall0.2.6 prepared fornormalrestart, preservingcurrentprocess/userpreferences. Commit/push main handoff follows verification.

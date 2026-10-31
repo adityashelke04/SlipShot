@@ -55,7 +55,7 @@ internal sealed class AppController : IDisposable
         menu.Items.Add("Settings",null,(_,_)=>Dispatch(OpenSettings));
         menu.Items.Add("Forget in-memory previews",null,(_,_)=>Dispatch(Forget));
         menu.Items.Add("Exit",null,(_,_)=>Dispatch(TryExit));
-        icon=CreateIcon();
+        icon=Branding.CreateTrayIcon();
         tray=new Forms.NotifyIcon {Icon=icon,Text="SlipShot · "+settings.Hotkey,ContextMenuStrip=menu,Visible=true};
         tray.DoubleClick+=(_,_)=>Dispatch(()=>_ = CaptureRegionAsync());
         hotkeys=new Hotkeys();hotkeys.Invoked+=()=>_ = CaptureRegionAsync();
@@ -258,15 +258,6 @@ internal sealed class AppController : IDisposable
     private static string Friendly(Exception ex)=>ex switch
     {UnauthorizedAccessException=>"The destination is not writable. Choose another folder.",IOException=>"The file or device is unavailable. Choose another location or try again.",OutOfMemoryException=>"Image memory is full. Close editors or pinned references and try again.",_=>"Try again, or check Settings. Protected and exclusive-fullscreen content may be unavailable."};
 
-    private static System.Drawing.Icon CreateIcon()
-    {
-        // Original vector crop mark, rendered once; no borrowed artwork or asset dependency.
-        using var bitmap=new System.Drawing.Bitmap(32,32);
-        using(var g=System.Drawing.Graphics.FromImage(bitmap))
-        {g.Clear(System.Drawing.Color.FromArgb(34,37,43));using var pen=new System.Drawing.Pen(System.Drawing.Color.FromArgb(130,216,190),3);g.DrawLines(pen,new[]{new System.Drawing.Point(10,5),new System.Drawing.Point(10,22),new System.Drawing.Point(27,22)});g.DrawLines(pen,new[]{new System.Drawing.Point(5,10),new System.Drawing.Point(22,10),new System.Drawing.Point(22,27)});}
-        IntPtr handle=bitmap.GetHicon();try {using var borrowed=System.Drawing.Icon.FromHandle(handle);return (System.Drawing.Icon)borrowed.Clone();}finally {DestroyIcon(handle);}
-    }
-    [System.Runtime.InteropServices.DllImport("user32.dll")]private static extern bool DestroyIcon(IntPtr handle);
     public void Dispose()
     {
         if(disposed)return;disposed=true;lifetime.Cancel();

@@ -14,6 +14,6 @@ The script copies only these fixed outputs:
 
 - `editor-dark.png`: editor, dark appearance,1240×820.
 - `editor-light.png`: editor, light appearance,1240×820.
-- `preview-dark.png`: capture preview, dark appearance,328×400, including Open file location.
+- `preview-dark.png`: capture preview, dark appearance,328×360, including the small footer folder shortcut.
 
-Review every image before staging it. The ignore file permits only these three PNG paths; other screenshot formats, private runtime data, generated artifacts and credentials remain ignored. Ignore rules are a guardrail, not a privacy guarantee. Never use `git add -f` to publish a personal capture. Newly authored interface geometry and synthetic fixture content use the repository MIT license.
+Review every image before staging it. The ignore file permits these three UI PNGs plus the separately documented generated logo boards and app ICO; private runtime data, unrelated screenshots, build artifacts and credentials remain ignored. Ignore rules are a guardrail, not a privacy guarantee. Never use `git add -f` to publish a personal capture. Newly authored interface geometry and synthetic fixture content use the repository MIT license.

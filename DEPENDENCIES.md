@@ -18,3 +18,5 @@ Sources/licenses: [Roslyn](https://github.com/dotnet/roslyn/blob/main/License.tx
 Tray mark and editor tool icons are original geometric drawings authored for SlipShot under this repository's MIT license. No competitor assets or external icon packs. Synthetic visual fixtures contain invented checklist text and `example.test`, never user content. Public reference images were examined only for research and are not shipped or committed.
 
 No telemetry, paid API or runtime network dependency is present. Package restore is development-time network activity only.
+
+0.2.7 identity: three AI-generated concept boards produced through ChatGPT image generation from a text-only product brief; no personal images supplied. Exact-color SVG masters and ICO generator are authored project assets. Native icon uses those vectors, not external font/image assets. Palette reference is Anthropic's public brand-guidelines repository; no Anthropic/Claude logo copied and no affiliation implied. See docs/branding for provenance, hashes and limits. Generation occurred during development only; installed app remains offline.

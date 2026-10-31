@@ -10,6 +10,8 @@ import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ALLOWED_IMAGES = {f'docs/images/{name}.png' for name in ('editor-dark', 'editor-light', 'preview-dark')}
+ALLOWED_IMAGES.update(f'docs/branding/concepts/{name}.png' for name in ('frame-s','lifted-slip','open-shutter'))
+ALLOWED_ICONS = {'src/SlipShot/Assets/slipshot.ico'}
 RULES = {
     'private key': rb'-----BEGIN (?:RSA |EC |OPENSSH |DSA |ENCRYPTED )?PRIVATE KEY-----',
     'GitHub token': rb'\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{40,})\b',
@@ -28,7 +30,7 @@ def forbidden(path):
             or (name.startswith('.env') and name != '.env.example')
             or name == 'settings.json'
             or suffix in {'.exe', '.dll', '.pdb', '.nupkg', '.pfx', '.p12', '.key', '.zip'}
-            or (suffix in {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif', '.tif', '.tiff'} and path not in ALLOWED_IMAGES))
+            or (suffix in {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif', '.tif', '.tiff', '.ico'} and path not in ALLOWED_IMAGES | ALLOWED_ICONS))
 
 findings = []
 tracked = git('ls-files', '-z').decode().split('\0')
@@ -88,5 +90,5 @@ for path in sorted(ALLOWED_IMAGES):
 if findings:
     raise SystemExit('\n'.join(sorted(set(findings))))
 print(f'PASS: {len(list(filter(None, tracked)))} tracked paths and {len(blobs)} historical blobs checked.')
-print('Only the three explicitly allowed synthetic PNG paths are permitted; no prohibited history paths or selected credential signatures found.')
+print('Only explicitly reviewed synthetic UI, generated logo boards and the app ICO are allowed; no prohibited history paths or selected credential signatures found.')
 print('PNG text/EXIF metadata absent. Pixel provenance still requires reviewing the generator and the actual images.')

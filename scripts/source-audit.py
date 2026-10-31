@@ -27,7 +27,21 @@ assert struct.unpack_from('<H', binary, offset+4)[0] == 0x8664, 'Expected x64 ho
 assert struct.unpack_from('<H', binary, offset+24+68)[0] == 2, 'Expected Windows GUI subsystem'
 assert b'SlipShot.dll\0' in binary, 'Apphost target missing'
 assert b'PerMonitorV2' in binary or 'PerMonitorV2'.encode('utf-16-le') in binary, 'DPI manifest missing'
+optional = offset + 24
+section_count = struct.unpack_from('<H', binary, offset+6)[0]
+optional_size = struct.unpack_from('<H', binary, offset+20)[0]
+resource_rva = struct.unpack_from('<I', binary, optional+112+16)[0]
+resource_offset = None
+for index in range(section_count):
+    section = optional+optional_size+40*index
+    virtual_size, rva, raw_size, raw_offset = struct.unpack_from('<IIII', binary, section+8)
+    if rva <= resource_rva < rva+max(virtual_size, raw_size):
+        resource_offset = raw_offset+resource_rva-rva
+assert resource_offset is not None, 'Native resources missing'
+named, ids = struct.unpack_from('<HH', binary, resource_offset+12)
+resource_types = {struct.unpack_from('<I', binary, resource_offset+16+8*i)[0] for i in range(named+ids)}
+assert {3,14,24}.issubset(resource_types), 'Native icon, icon-group or manifest resource missing'
 assert not findings, '\n'.join(findings)
 print(f'Static source scan: {len(files)} C# files; no selected network, logging, placeholder or foreground-forcing APIs found.')
-print('Project XML parsed; native host PE is x64/Windows GUI, targets SlipShot.dll, contains PerMonitorV2 manifest.')
+print('Project XML parsed; x64 GUI apphost targets SlipShot.dll with native icon/icon-group resources and PerMonitorV2 manifest.')
 print('These bounded static checks do not prove absence of all network activity, native correctness or application launch.')

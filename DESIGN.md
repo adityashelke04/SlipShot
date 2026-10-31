@@ -1,5 +1,11 @@
 # Visual and interaction specification
 
+## Current identity (0.2.7)
+
+User explicitly requested orange#D97757 and near-black#141413 from Anthropic's published palette. Frame-S is the selected original mark; generated alternatives and audits live under docs/branding. Runtime uses exact-color SVG-derived icon assets, not AI raster boards. Normal surfaces use warm neutral derivatives; primary accent/on-accent colors stay exact, light focus outlines use darker#A04F35 for contrast and high contrast overrides with system colors. This supersedes earlier mint/graphite tokens below.
+
+Preview primary actions are one row: Edit/Copy/Save/Pin. Infrequent folder navigation belongs in a28DIP bordered icon box immediately beside footer Latest in tray, with accessible full name and tooltip. No extra primary row. Primary action hierarchy and Save-once behavior remain intact.
+
 Reading this as a compact Windows utility for focused work and gaming, with a calm native language. Mode: Operate. No dashboard, onboarding, marketing or animated decoration. User requirements override web-specific skill suggestions.
 
 Tokens: Segoe UI 13 body, 12 secondary, 16 section, 24 title; spacing 4/8/12/16/24/32 DIP; control corners 8, floating surfaces 12. Dark background #17191D, panel #22252B, border #42464F, text #F3F4F6, muted #B8BEC8. Light background #F3F4F6, panel #FFFFFF, border #CCD1D8, text #20242A, muted #555E6C. Accent #257A68 light / #82D8BE dark. System high-contrast colors take priority. System theme default, explicit light/dark overrides.

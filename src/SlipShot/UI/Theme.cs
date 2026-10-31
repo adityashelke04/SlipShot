@@ -18,6 +18,7 @@ internal static class Theme
     public static Brush MutedBrush => Get("Muted");
     public static Brush BorderBrush => Get("Border");
     public static Brush AccentBrush => Get("Accent");
+    public static Brush FocusBrush => Get("Focus");
     public static Brush OnAccentBrush => Get("OnAccent");
     public static Brush CanvasBrush => Get("Canvas");
     private static Brush Get(string key) => (Brush)Application.Current.Resources[key];
@@ -32,12 +33,12 @@ internal static class Theme
         }
         var r = Application.Current.Resources;
         void Set(string key,string value) { var color=(Color)ColorConverter.ConvertFromString(value); if(r[key] is SolidColorBrush existing && !existing.IsFrozen) existing.Color=color; else r[key]=new SolidColorBrush(color); }
-        Set("Surface",dark?"#191C20":"#F7F8FA"); Set("Panel",dark?"#22262B":"#FFFFFF");
-        Set("Canvas",dark?"#101316":"#E9EDF0"); Set("Selected",dark?"#2A403B":"#E2F2EB");
-        Set("Ink",dark?"#F0F3F5":"#1E272C"); Set("Muted",dark?"#A3ADB5":"#5F6C75");
-        Set("Border",dark?"#363D43":"#DDE3E7"); Set("Accent",dark?"#9DE4C7":"#197456");
-        Set("OnAccent",dark?"#142C23":"#FFFFFF");
-        Set("Hover",dark?"#30373D":"#EDF2F4"); Set("Pressed",dark?"#384941":"#DDEBE4");
+        Set("Surface",dark?"#141413":"#FAF9F5"); Set("Panel",dark?"#20201E":"#FFFFFF");
+        Set("Canvas",dark?"#10100F":"#E8E6DC"); Set("Selected",dark?"#35241F":"#F4E4DC");
+        Set("Ink",dark?"#FAF9F5":"#141413"); Set("Muted",dark?"#B0AEA5":"#625F57");
+        Set("Border",dark?"#3A3A36":"#D8D5CC"); Set("Accent","#D97757");
+        Set("OnAccent","#141413");Set("Focus",dark?"#D97757":"#A04F35");
+        Set("Hover",dark?"#30302C":"#EFEDE6"); Set("Pressed",dark?"#453027":"#EAD7CC");
         if (SystemParameters.HighContrast)
         {
             Set("Surface",SystemColors.WindowColor.ToString());Set("Panel",SystemColors.WindowColor.ToString());
@@ -45,6 +46,7 @@ internal static class Theme
             Set("Border",SystemColors.HighlightColor.ToString());Set("Accent",SystemColors.HighlightColor.ToString());
             Set("Hover",SystemColors.ControlColor.ToString());Set("Pressed",SystemColors.ControlColor.ToString());
             Set("Canvas",SystemColors.WindowColor.ToString());Set("Selected",SystemColors.ControlColor.ToString());Set("OnAccent",SystemColors.HighlightTextColor.ToString());
+            Set("Focus",SystemColors.HighlightColor.ToString());
         }
         MotionEnabled = !reducedMotion && SystemParameters.ClientAreaAnimation && !SystemParameters.HighContrast;
         if (!r.Contains(typeof(Button)))
@@ -65,7 +67,7 @@ internal static class Theme
                     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Hover}"/></Trigger>
                     <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Pressed}"/></Trigger>
                     <Trigger Property="Tag" Value="Primary"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Accent}"/><Setter Property="Foreground" Value="{DynamicResource OnAccent}"/></Trigger>
-                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Accent}"/><Setter TargetName="Chrome" Property="BorderThickness" Value="2"/></Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Focus}"/><Setter TargetName="Chrome" Property="BorderThickness" Value="2"/></Trigger>
                     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
                   </ControlTemplate.Triggers>
                 </ControlTemplate></Setter.Value></Setter>
@@ -78,7 +80,7 @@ internal static class Theme
                     <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press">
                       <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border x:Name="Chrome" CornerRadius="6" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Border}" BorderThickness="1"><Grid><ContentPresenter Margin="8,4,22,4" Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}" ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}" VerticalAlignment="Center"/><Path Data="M 0,0 L 4,4 L 8,0" Stroke="{DynamicResource Ink}" StrokeThickness="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"/></Grid></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Hover}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></ToggleButton.Template>
                     </ToggleButton>
-                    <Border x:Name="Focus" BorderBrush="{DynamicResource Accent}" BorderThickness="0" CornerRadius="6" IsHitTestVisible="False"/>
+                    <Border x:Name="Focus" BorderBrush="{DynamicResource Focus}" BorderThickness="0" CornerRadius="6" IsHitTestVisible="False"/>
                     <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False"><Border Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="4" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"><ScrollViewer MaxHeight="240"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/></ScrollViewer></Border></Popup>
                   </Grid>
                   <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Focus" Property="BorderThickness" Value="2"/></Trigger></ControlTemplate.Triggers>
@@ -92,7 +94,7 @@ internal static class Theme
             foreach(var key in resources.Keys) r[key]=resources[key];
         }
     }
-    public static void Apply(Window window) { window.SetResourceReference(Control.BackgroundProperty,"Surface"); window.SetResourceReference(Control.ForegroundProperty,"Ink"); window.FontFamily=new FontFamily("Segoe UI"); window.FontSize=13; window.UseLayoutRounding=true; }
+    public static void Apply(Window window) { window.SetResourceReference(Control.BackgroundProperty,"Surface"); window.SetResourceReference(Control.ForegroundProperty,"Ink"); window.FontFamily=new FontFamily("Segoe UI"); window.FontSize=13; window.UseLayoutRounding=true;window.Icon=Branding.WindowIcon; }
     public static TextBlock Text(string text,double size=13,bool muted=false)
     { var t=new TextBlock { Text=text,FontSize=size,TextWrapping=TextWrapping.Wrap }; t.SetResourceReference(TextBlock.ForegroundProperty,muted?"Muted":"Ink"); return t; }
     public static Button Button(string text,Action action,bool primary=false)

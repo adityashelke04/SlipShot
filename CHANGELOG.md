@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.7-preview.1 — 2026-10-31
+
+Moved folder access to a compact footer box beside Latest in tray; restored one primary Edit/Copy/Save/Pin row. Added three ChatGPT-generated identity concepts, exact-color original SVG masters and an audited Frame-S Windows icon at9sizes. Executable/window/tray icon resources now present; UI orange/charcoal palette uses verified brand reference colors with contrast-safe text/focus.125tests pass. Existing screenshots and user data remain untouched.
+
 ## 0.2.6-preview.1 — 2026-10-31
 
 Added Open file location beside Edit in the left preview. It opens the configured captures folder in Windows Explorer, creating an empty folder if needed; it never saves an image. Errors stay inline. Preview actions use two compact rows. Existing app/tray icon is unchanged; image/logo generation awaits explicit user approval.

@@ -1,4 +1,4 @@
-param([string]$Version='0.2.6-preview.1')
+param([string]$Version='0.2.7-preview.1')
 $ErrorActionPreference='Stop'
 . "$PSScriptRoot/environment.ps1"
 if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$') { throw 'Use a simple semantic version.' }
@@ -18,6 +18,13 @@ foreach($name in 'PUBLISHING.md','DRAG_REVIEW.md','REFERENCE_REFRESH.md','EDITOR
 $imageDocs=Join-Path $releaseDocs 'images'
 New-Item -ItemType Directory -Path $imageDocs | Out-Null
 foreach($name in 'editor-dark.png','editor-light.png','preview-dark.png','README.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/images/$name") -Destination $imageDocs}
+$brandingDocs=Join-Path $releaseDocs 'branding'
+New-Item -ItemType Directory -Path (Join-Path $brandingDocs 'concepts') -Force | Out-Null
+foreach($name in 'README.md','ASSETS.md','LOGO_AUDIT.md','FINAL_AUDIT.md') {Copy-Item -LiteralPath (Join-Path $repo "docs/branding/$name") -Destination $brandingDocs}
+foreach($name in 'frame-s.png','lifted-slip.png','open-shutter.png') {Copy-Item -LiteralPath (Join-Path $repo "docs/branding/concepts/$name") -Destination (Join-Path $brandingDocs 'concepts')}
+$brandSources=Join-Path $destination 'src/SlipShot/Assets'
+New-Item -ItemType Directory -Path $brandSources -Force | Out-Null
+foreach($name in 'frame-s.svg','frame-s-dark.svg','lifted-slip.svg','lifted-slip-dark.svg','open-shutter.svg','open-shutter-dark.svg','slipshot.ico') {Copy-Item -LiteralPath (Join-Path $repo "src/SlipShot/Assets/$name") -Destination $brandSources}
 $hashes=Get-ChildItem -LiteralPath $destination -File -Recurse | Sort-Object FullName | ForEach-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_.FullName.Substring($destination.Length+1).Replace('\','/') }
 [IO.File]::WriteAllLines((Join-Path $destination 'SHA256SUMS.txt'),$hashes)
 $archive=Join-Path $release "SlipShot-$Version-win-x64.zip"

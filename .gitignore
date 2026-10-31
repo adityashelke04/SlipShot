@@ -28,7 +28,12 @@ TestResults/
 *.webp
 *.tif
 *.tiff
-# Only reviewed, generated UI examples may be published as images.
+# Only explicitly reviewed synthetic UI and brand assets may be published as images.
 !docs/images/editor-dark.png
 !docs/images/editor-light.png
 !docs/images/preview-dark.png
+*.ico
+!src/SlipShot/Assets/slipshot.ico
+!docs/branding/concepts/frame-s.png
+!docs/branding/concepts/lifted-slip.png
+!docs/branding/concepts/open-shutter.png

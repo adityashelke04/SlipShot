@@ -18,6 +18,8 @@ Three generated previews under `docs/images`: actual WPF editor in light/dark an
 
 This is a focused accidental-publication check, not a complete secret-scanner or a guarantee that arbitrary future files are safe. Public research references and normal Git authorship/repository metadata remain. Review image pixels and provenance whenever replacing demos; never substitute a real screenshot and rely only on redaction or `.gitignore`. The scripts inspect this repository only, not personal folders or unrelated applications.
 
+0.2.7 adds explicitly approved brand assets: three ChatGPT-generated concept PNGs (text prompts only), six authored path-only SVG masters/variants and their generated app ICO. These exact paths are reviewed; unrelated images remain blocked. The generation tool's originals remain in its managed cache, with project copies under F:/SlipShot. No user screenshot was submitted as an image-generation reference. Canonical vector and ICO palette checks are separate from privacy checks.
+
 Before a future push:
 
 ```powershell

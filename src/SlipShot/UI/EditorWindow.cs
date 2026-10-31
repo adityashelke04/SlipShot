@@ -526,14 +526,14 @@ public sealed class EditorWindow : Window
         if (kind == ToolKind.Redaction) _hex.Text = "#000000";
         foreach (var pair in _toolButtons)
         {
-            pair.Value.BorderBrush = pair.Key == _tool ? Theme.AccentBrush : Brushes.Transparent;
+            pair.Value.BorderBrush = pair.Key == _tool ? Theme.FocusBrush : Brushes.Transparent;
             if (pair.Key == _tool) pair.Value.SetResourceReference(Control.BackgroundProperty, "Selected");
             else pair.Value.Background = Brushes.Transparent;
             pair.Value.BorderThickness = new Thickness(1);
             AutomationProperties.SetHelpText(pair.Value, pair.Key == _tool ? "Selected tool" : "");
         }
         foreach (var button in _colorButtons)
-            button.BorderBrush = button.Tag is Color color && color == _color ? Theme.AccentBrush : Brushes.Transparent;
+            button.BorderBrush = button.Tag is Color color && color == _color ? Theme.FocusBrush : Brushes.Transparent;
         _surface.Cursor = _tool switch { ToolKind.Pan => Cursors.Hand, ToolKind.Select => Cursors.Arrow, ToolKind.Text => Cursors.IBeam, _ => Cursors.Cross };
         _syncing = false;
     }

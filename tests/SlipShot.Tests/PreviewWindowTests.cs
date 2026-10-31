@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Automation;
 using System.Linq;
 using SlipShot.Core;
@@ -27,8 +28,34 @@ public class PreviewWindowTests
         try
         {
             var button=Descendants(window).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Open file location");
+            var footer=(Grid)LogicalTreeHelper.GetParent(button);
+            Assert.That(footer.Children.OfType<TextBlock>().Single().Text,Is.EqualTo("Auto-hide: 10s · Latest in tray"));
+            Assert.That(Grid.GetColumn(button),Is.EqualTo(1));
+            Assert.That(button.Width,Is.EqualTo(28));Assert.That(button.Height,Is.EqualTo(28));
+            Assert.That(button.ToolTip,Is.EqualTo("Open captures folder"));
+            var actions=Descendants(window).OfType<UniformGrid>().Single();
+            Assert.That(actions.Columns,Is.EqualTo(4));
+            Assert.That(actions.Children.OfType<Button>().Select(AutomationProperties.GetName),Is.EqualTo(new[]{"Edit","Copy",saved?"Image saved":"Save","Pin"}));
             Assert.That(button.IsEnabled,Is.True);button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.That(opens,Is.EqualTo(1));Assert.That(saves,Is.Zero);Assert.That(edits,Is.Zero);
+            Assert.That(new WindowInteropHelper(window).Handle,Is.EqualTo(IntPtr.Zero));
+        }
+        finally{window.Close();}
+    }
+    [Test] public void FooterLocationRemainsAvailableWhenSaveStateChanges()
+    {
+        _=Application.Current??new Application {ShutdownMode=ShutdownMode.OnExplicitShutdown};Theme.Configure("Light",true);
+        var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=800,Bottom=600},new Native.RectI {Right=800,Bottom=600},1);
+        var doc=new EditDocument(CoreTests.Image());int opens=0;
+        var window=new PreviewWindow(doc.Source,monitor,10,()=>{},()=>System.Threading.Tasks.Task.CompletedTask,()=>System.Threading.Tasks.Task.FromResult(false),()=>{},document:doc,openLocation:()=>opens++);
+        try
+        {
+            Button folder=Descendants(window).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Open file location");
+            folder.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            doc.MarkSaved("synthetic-status.png");
+            Assert.That(Descendants(window).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Image saved").IsEnabled,Is.False);
+            Assert.That(folder.IsEnabled,Is.True);folder.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.That(opens,Is.EqualTo(2));
             Assert.That(new WindowInteropHelper(window).Handle,Is.EqualTo(IntPtr.Zero));
         }
         finally{window.Close();}
