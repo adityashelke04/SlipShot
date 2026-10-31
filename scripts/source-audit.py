@@ -11,6 +11,10 @@ for path in files:
         continue
     text = path.read_text(encoding='utf-8-sig')
     for pattern in patterns:
+        # Explicit user-clicked folder navigation: fixed Windows Explorer executable,
+        # one validated directory argument; reviewed/tested in CaptureFolderTests.
+        if pattern == r'\bProcess\.Start\s*\(' and path == root / 'src/SlipShot/Services/CaptureFolder.cs':
+            continue
         if re.search(pattern, text):
             findings.append(f'{path.relative_to(root)}: {pattern}')
 for path in [root / 'Directory.Build.props', *root.glob('**/*.csproj'), root / 'src/SlipShot/app.manifest']:

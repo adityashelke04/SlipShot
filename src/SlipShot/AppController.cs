@@ -128,7 +128,7 @@ internal sealed class AppController : IDisposable
         ImageFiles.RefreshSavedState(shot.Document);
         var card=new PreviewWindow(shot.Image,shot.Monitor,settings.PreviewSeconds,
             ()=>OpenEditor(shot),()=>CopyAsync(new EditDocument(shot.Image)),
-            ()=>SaveAsync(shot.Document),()=> {try {Pin(shot.Image);}catch(InvalidOperationException ex){Notify(ex.Message);} },DragImage,shot.Document);
+            ()=>SaveAsync(shot.Document),()=> {try {Pin(shot.Image);}catch(InvalidOperationException ex){Notify(ex.Message);} },DragImage,shot.Document,()=>CaptureFolder.Open(settings.SaveDirectory));
         preview=card;
         card.Closed+=(_,_)=> {if(!ReferenceEquals(preview,card))return;preview=null;if(!suppressAdvance)queue.Clear();};
         card.Show();

@@ -17,6 +17,35 @@ namespace SlipShot.Tests;
 [TestFixture,Apartment(ApartmentState.STA),NonParallelizable]
 public class PreviewWindowTests
 {
+    [TestCase(false)] [TestCase(true)]
+    public void OpenFileLocationIsAvailableBeforeAndAfterSaveWithoutSaving(bool saved)
+    {
+        _=Application.Current??new Application {ShutdownMode=ShutdownMode.OnExplicitShutdown};Theme.Configure("Light",true);
+        var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=800,Bottom=600},new Native.RectI {Right=800,Bottom=600},1);
+        var doc=new EditDocument(CoreTests.Image());if(saved)doc.MarkSaved("synthetic-status.png");int opens=0,saves=0,edits=0;
+        var window=new PreviewWindow(doc.Source,monitor,10,()=>edits++,()=>System.Threading.Tasks.Task.CompletedTask,()=>{saves++;return System.Threading.Tasks.Task.FromResult(true);},()=>{},document:doc,openLocation:()=>opens++);
+        try
+        {
+            var button=Descendants(window).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Open file location");
+            Assert.That(button.IsEnabled,Is.True);button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.That(opens,Is.EqualTo(1));Assert.That(saves,Is.Zero);Assert.That(edits,Is.Zero);
+            Assert.That(new WindowInteropHelper(window).Handle,Is.EqualTo(IntPtr.Zero));
+        }
+        finally{window.Close();}
+    }
+    [Test] public void FolderOpenFailureStaysInlineAndCanBeRetried()
+    {
+        _=Application.Current??new Application {ShutdownMode=ShutdownMode.OnExplicitShutdown};Theme.Configure("Light",true);
+        var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=800,Bottom=600},new Native.RectI {Right=800,Bottom=600},1);
+        var window=new PreviewWindow(CoreTests.Image(),monitor,10,()=>{},()=>System.Threading.Tasks.Task.CompletedTask,()=>System.Threading.Tasks.Task.FromResult(false),()=>{},openLocation:()=>throw new System.IO.IOException("Synthetic inaccessible folder"));
+        try
+        {
+            var button=Descendants(window).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Open file location");
+            Assert.DoesNotThrow(()=>button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)));
+            Assert.That(button.IsEnabled,Is.True);Assert.That(Descendants(window).OfType<TextBlock>().Any(t=>t.Text.Contains("Folder unavailable")),Is.True);
+        }
+        finally{window.Close();}
+    }
     [Test] public void SuccessfulPreviewSaveDisablesSaveAndCannotRunTwice()
     {
         _=Application.Current??new Application {ShutdownMode=ShutdownMode.OnExplicitShutdown};Theme.Configure("Light",true);

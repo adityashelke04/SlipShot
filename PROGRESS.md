@@ -1,5 +1,9 @@
 # Progress
 
+## Latest: 0.2.6-preview.1 folder action
+
+Added Open file location next to Edit in preview; configured SaveDirectory/defaultF:/SlipShot Captures resolved on click. Fixed Windows Explorer executable + one argument, folder validated/created beforelaunch; tests inject callback/build request only, no Explorerlaunch/personalimageaccess. Existingiconunchanged asuserrequestedapprovalbeforegeneration; confirmedChatGPTimagegenerationavailable. Reviewfoundonlyruntime traymark configured, noApplicationIcon/Window.Icon asset; iconworkpendingapproval.120tests passed; dark/lightSaved preview layouts inspected; evidence docs/FOLDER_ACTION_REVIEW.md. Newinstall0.2.6 prepared fornormalrestart, preservingcurrentprocess/userpreferences. Commit/push main handoff follows verification.
+
 ## Latest: 0.2.5-preview.2 save once
 
 User reported repeatSave stilloffered andduplicatePNGs; reproduced actualcontroller3saves→3files, fixedto1. Captured.Document retainsbaseline; independenteditorFork shares weakper-snapshot save receipts. Savedbuttonsdisabled; explicitSaveacopyas separate; no pickerfromquickSave. Failed/deletedfile recovery, undo/redo receipts, overwriteinvalidation acrosslivecaptures andweakownerUIupdates addedafterindependentreview.114tests passed; reviewverdictShip. Version0.2.5-preview.2 packaged/installed for normalrestart; existingruntime unsavedwork preserved. Userrequested main; finalcommit/push main anddefaultbranch switch complete asrecordedinhandoff. No existinguserimagesdeleted.

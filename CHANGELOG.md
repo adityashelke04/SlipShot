@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.6-preview.1 — 2026-10-31
+
+Added Open file location beside Edit in the left preview. It opens the configured captures folder in Windows Explorer, creating an empty folder if needed; it never saves an image. Errors stay inline. Preview actions use two compact rows. Existing app/tray icon is unchanged; image/logo generation awaits explicit user approval.
+
 ## 0.2.5-preview.2 — 2026-10-31
 
 Save now remembers successful exports per capture snapshot. Unchanged repeat saves are no-ops; buttons become disabled Saved. Capture previews and reopened editors share save receipts but keep independent edits. Undo/redo recognizes already-exported snapshots. Failed/deleted exports remain recoverable, and confirmed Save As overwrites invalidate stale receipts. Separate copies require the explicitly named Save a copy as action. Default GitHub branch becomes main; older master history remains.

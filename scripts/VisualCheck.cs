@@ -49,8 +49,8 @@ internal static class VisualCheck
             }
             var sample=SyntheticDocument();
             var monitor=new CaptureMonitor(IntPtr.Zero,new Native.RectI {Right=1920,Bottom=1080},new Native.RectI {Right=1920,Bottom=1040},1);
-            var preview=new PreviewWindow(sample.Source,monitor,10,()=>{},()=>Task.CompletedTask,()=>Task.FromResult(false),()=>{});
-            RenderContent(preview,new Size(328,360),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}.png"));
+            var preview=new PreviewWindow(sample.Source,monitor,10,()=>{},()=>Task.CompletedTask,()=>Task.FromResult(false),()=>{},openLocation:()=>{});
+            RenderContent(preview,new Size(328,400),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}.png"));
             var settings=new SettingsWindow(new AppSettings(),_=>null);
             RenderContent(settings,new Size(460,660),Path.Combine(output,$"settings-{appearance.ToLowerInvariant()}.png"));
             foreach(var tool in new[]{ToolKind.Text,ToolKind.Rectangle,ToolKind.Redaction})
@@ -64,8 +64,8 @@ internal static class VisualCheck
             var savedEditor=new EditorWindow(savedDocument,_=>Task.FromResult(true),_=>Task.CompletedTask,_=>{});
             RenderContent(savedEditor,new Size(640,480),Path.Combine(output,$"editor-{appearance.ToLowerInvariant()}-saved.png"));
             ((DocumentViewModel)savedEditor.DataContext).Dispose();
-            var savedPreview=new PreviewWindow(savedDocument.Source,monitor,10,()=>{},()=>Task.CompletedTask,()=>Task.FromResult(true),()=>{},document:savedDocument);
-            RenderContent(savedPreview,new Size(328,360),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}-saved.png"));
+            var savedPreview=new PreviewWindow(savedDocument.Source,monitor,10,()=>{},()=>Task.CompletedTask,()=>Task.FromResult(true),()=>{},document:savedDocument,openLocation:()=>{});
+            RenderContent(savedPreview,new Size(328,400),Path.Combine(output,$"preview-{appearance.ToLowerInvariant()}-saved.png"));
         }
         // Do not close the unshown editor objects: no native lifetime or close-dialog path is exercised.
         return 0;

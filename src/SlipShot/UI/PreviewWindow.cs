@@ -35,7 +35,7 @@ internal sealed class PreviewWindow : Window
     internal bool IsDragging => dragging;
 
     internal PreviewWindow(BitmapSource image, CaptureMonitor monitor, int seconds, Action edit, Func<Task> copy,
-        Func<Task<bool>> save, Action pin, Action<DependencyObject, BitmapSource>? drag = null,EditDocument? document=null)
+        Func<Task<bool>> save, Action pin, Action<DependencyObject, BitmapSource>? drag = null,EditDocument? document=null,Action? openLocation=null)
     {
         this.monitor = monitor;
         previewDuration = TimeSpan.FromSeconds(seconds);
@@ -108,8 +108,23 @@ internal sealed class PreviewWindow : Window
         metadata.Children.Add(dimensions);
         stack.Children.Add(metadata);
 
-        var actions = new UniformGrid { Columns = 4 };
-        AddAction("Edit", "M 2,11 L 1,15 L 5,14 L 14,5 L 10,1 Z M 8,3 L 12,7", edit, true);
+        var actions = new UniformGrid { Columns = 3 };
+        var primaryActions=new DockPanel();
+        Button editButton=AddAction("Edit", "M 2,11 L 1,15 L 5,14 L 14,5 L 10,1 Z M 8,3 L 12,7", edit, true,primaryActions);
+        if(openLocation is not null)
+        {
+            editButton.Width=82;DockPanel.SetDock(editButton,Dock.Left);
+            var folderButton=AddAction("Open file location","M 1,5 L 1,2 L 6,2 L 8,5 L 15,5 L 15,14 L 1,14 Z M 1,5 L 15,5",()=>
+            {
+                try {openLocation();hint.Text="Capture folder opened";}
+                catch(Exception error) when(error is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
+                {hint.Text="Folder unavailable · check Settings";hint.ToolTip=error.Message;}
+                lifetime=new PreviewLifetime(previewDuration);clock.Restart();
+            },parent:primaryActions);
+            folderButton.ToolTip="Open your configured SlipShot captures folder in File Explorer";
+        }
+        var primaryGroup=new Border {Child=primaryActions,CornerRadius=new CornerRadius(9),Padding=new Thickness(2),Margin=new Thickness(0,12,0,0)};
+        primaryGroup.SetResourceReference(Border.BackgroundProperty,"Canvas");stack.Children.Add(primaryGroup);
         Button? copyButton=null;
         copyButton=AddAction("Copy", "M 5,5 L 14,5 L 14,15 L 5,15 Z M 2,11 L 1,11 L 1,1 L 10,1 L 10,2", ()=>_ = CopyImageAsync());
         bool savedHere=document?.IsSaved==true;
@@ -118,7 +133,7 @@ internal sealed class PreviewWindow : Window
         UpdateSaveState();if(document is not null)document.Changed+=UpdateSaveState;
         MouseEnter+=(_,_)=>{if(document is not null)ImageFiles.RefreshSavedState(document);};
         AddAction("Pin", "M 5,1 L 11,1 M 6,1 L 6,6 L 3,10 L 13,10 L 10,6 L 10,1 M 8,10 L 8,15", pin);
-        var actionGroup = new Border { Child = actions, CornerRadius = new CornerRadius(9), Padding = new Thickness(2), Margin = new Thickness(0, 12, 0, 0) };
+        var actionGroup = new Border { Child = actions, CornerRadius = new CornerRadius(9), Padding = new Thickness(2), Margin = new Thickness(0, 4, 0, 0) };
         actionGroup.SetResourceReference(Border.BackgroundProperty, "Canvas");
         stack.Children.Add(actionGroup);
         TextBlock retention = Theme.Text($"Auto-hide: {seconds}s · Latest in tray", 11, true);
@@ -229,7 +244,7 @@ internal sealed class PreviewWindow : Window
             finally {copying=false;copyButton.IsEnabled=true;lifetime=new PreviewLifetime(previewDuration);clock.Restart();}
         }
 
-        Button AddAction(string label, string path, Action action, bool primary = false)
+        Button AddAction(string label, string path, Action action, bool primary = false,Panel? parent=null)
         {
             Button button = Theme.Button(label, action, primary);
             button.Margin = new Thickness(1, 0, 1, 0);
@@ -240,7 +255,7 @@ internal sealed class PreviewWindow : Window
             text.SetResourceReference(TextBlock.ForegroundProperty, primary ? "OnAccent" : "Ink");
             content.Children.Add(text);
             button.Content = content;
-            actions.Children.Add(button);
+            (parent??actions).Children.Add(button);
             return button;
         }
     }

@@ -6,7 +6,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <StartupObject>SlipShot.Program</StartupObject>
     <AssemblyName>SlipShot</AssemblyName>
-    <Version>0.2.5-preview.2</Version>
+    <Version>0.2.6-preview.1</Version>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 </Project>
