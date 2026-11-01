@@ -1,5 +1,7 @@
 # Verification record and desktop matrix
 
+2026-11-01 drag reliability fix (0.2.9): 165 automated tests pass; one native hotkey fixture remains explicit/unrun. 36 offscreen UI renders and the theme-switch comparison pass. Authorized synthetic native OLE comparison: the deployed build failed 10/10 delayed-read None cases while passing 10/10 Copy cases; the fixed build passed 20/20 actual drops with no invalid attempts. No user desktop capture, real clipboard, hotkey registration, Discord/ChatGPT attachment or network upload was used. Earlier desktop matrices below are historical. Full RCA, exact evidence locations, diagnostics and remaining target acceptance: [drag-and-drop RCA](docs/DRAG_DROP_RCA.md).
+
 2026-10-31 bug review: 149 automatic tests pass, with one native hotkey test explicitly opt-in; 36 offscreen UI renders and the theme-switch comparison pass. Eight confirmed bugs were fixed, including the folder-action dismissal path found during final review. See [application audit](docs/AUDIT_4.md) for before/after behavior, regression evidence and remaining release checks.
 
 Automated runs use synthetic pixels, fake clipboard sinks, temporary files under the test output, and serial NUnit STA execution. No capture overlay, production hotkey, real clipboard write or user-desktop screenshot was performed. Native desktop tests are **NOT RUN**.

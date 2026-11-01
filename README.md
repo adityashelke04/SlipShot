@@ -12,7 +12,7 @@ A small, local-only Windows screenshot editor. Capture a region, open the bottom
 
 [Visit the SlipShot website](https://slipshot-app.vercel.app/) for an interactive workflow preview and feature comparison.
 
-**0.2.8-preview.1 — Frame-S identity and a consistent light/dark interface.** Synthetic tests do not establish production readiness. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
+**0.2.9-preview.1 — safer drag-and-drop lifetime and local opt-in diagnostics.** See the [drag-and-drop RCA](docs/DRAG_DROP_RCA.md) for the reproduced failure, fix and verification limits. SlipShot is a provisional name, without a trademark availability claim. MIT license for original code. No BridgeShot source, binaries, branding or artwork is included.
 
 ## App preview
 
@@ -33,7 +33,7 @@ The real WPF interface, rendered with generated demo content only. **No personal
 
 Windows 10 version 2004 or newer / Windows 11, **x64**, with the **.NET 8 Windows Desktop Runtime**. Keep all files in the portable folder together and run `SlipShot.exe`. It starts in the notification area, without an editor or capture overlay appearing automatically. Default capture shortcut: **Ctrl+Alt+S**. The tray also provides capture, recent-image access, settings and exit. Windows may hide the tray icon in its overflow menu.
 
-Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.8-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
+Build output: `artifacts/portable/SlipShot.exe`. Organized release: `artifacts/releases/0.2.9-preview.1/win-x64/SlipShot.exe`. Exit the previous version from its tray menu before running the new version; unsaved editors must be resolved normally. It is unsigned; Windows reputation warnings are possible. Do not disable Windows security. No installer, service, startup registration or updater is supplied.
 
 All preferences live in `data/settings.json` beside the executable. Put the portable folder in a location you can write. There is no screenshot history or automatic saving on capture. **Save** writes a PNG directly to **F:\SlipShot Captures** on this installation, without a dialog. It then becomes disabled **Saved**. Repeated Save/Ctrl+S for the same capture version does not write another file, including after reopening its editor. An edit enables Save again and exports a new version while preserving the previous file. Undo/redo recognizes versions already saved. Change **Quick-save folder** in Settings. **Save a copy as…** (the arrow beside Save or Ctrl+Shift+S) deliberately creates another copy or chooses JPEG/a different filename. Failed saves keep edits and allow retry; missing files are checked on reopening, activation, preview entry and Save rather than continuously polled. No existing captures are deleted by this fix.
 
@@ -53,7 +53,7 @@ The app now embeds an original Frame-S icon in the executable, editor windows an
 
 Drag handoff uses standard Windows FileDrop, Bitmap and PNG formats. A terminal may insert a file path, an agent composer may attach an image, and some targets reject drops entirely. Drag onto the image-attachment area when available. Windows may block drops into elevated apps; SlipShot does not elevate or bypass this. A path-only terminal target must keep the referenced file or save its own copy if it needs long-term access.
 
-Accepted drag files survive app exit for late target reads. Owned files older than24hours are cleaned only on a later explicit drag; they are not guaranteed to disappear at24hours. Retention is capped at32files/256MiB; on capacity, use Copy or Save rather than silently evicting recent handoffs. Canceled/interrupted transfers delete their own temporary file where filesystem permissions allow. These temporary files contain only flattened exported pixels. Ordinary captures still create no file.
+Accepted drag files and payloads already read by a receiving app stay available for late reads, even if the target returns no drag effect. These files survive app exit. Owned files older than 24 hours are cleaned only on a later explicit drag; they are not guaranteed to disappear at 24 hours. Retention is capped at 1024 files/256 MiB; on capacity, use Copy or Save rather than silently evicting recent handoffs. Canceled/interrupted transfers that were never read delete their own temporary file where permissions allow. A target can read data during hover, so some canceled drags also retain a file. These files contain only flattened exported pixels. Ordinary captures still create no file.
 
 SlipShot is an open-source preview with `main` tracking `origin/main`. See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), and [publishing notes](docs/PUBLISHING.md). Desktop acceptance remains ongoing; this is not a stable production release.
 
@@ -100,7 +100,7 @@ python scripts/bootstrap-compiler.py
 - Capture exclusion is best effort; own visible windows are also hidden before capture and DWM is flushed. This is not a confidentiality guarantee against other tools. Those native behaviors require the checks in TESTING.md.
 - Selection coordinates are physical pixels; editor coordinates are source pixels. Strokes scale with image zoom; resizing object geometry retains its stroke width. Resizing text changes font size. Exports use crop pixel dimensions at 96 DPI, without source metadata/layers/thumbnails.
 - Redaction is opaque black and rendered last. Original pixels remain in the in-memory source and undo history until references are released. No forensic RAM erasure or OS clipboard-history deletion is promised. Pin copies are independently retained until closed.
-- No telemetry, accounts, OCR, AI models, uploading, updater or background network requests. No screenshot/clipboard/window-title logging. Preferences contain no image data.
+- No telemetry, accounts, OCR, AI models, uploading, updater or background network requests. No screenshot/clipboard/window-title logging. Preferences contain no image data. Optional local drag diagnostics (`SLIPSHOT_DRAG_DIAGNOSTICS=1` before launch) record timing, format queries, effects and retention decisions without pixels, filenames, paths or exception messages; see the [RCA](docs/DRAG_DROP_RCA.md).
 - CPU, working-set and gameplay impact have not been measured. Timers run only while a preview is alive. Idle targets are intentions pending measurement, not zero-impact claims.
 - Full-monitor/foreground-window capture, OCR, persistent history and presentation export are intentionally absent. Pin is implemented. There are no controls for absent tools.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9-preview.1 — 2026-11-01
+
+Fixed premature deletion of drag PNGs and disposal of PNG streams when a receiving app takes the payload but reports no Copy effect. Actual payload reads now preserve the handoff; format queries alone still permit cancellation cleanup. Increased the retained-file count limit from 32 to 1024 while keeping the 256-MiB byte cap and 24-hour expiry. Added opt-in bounded local diagnostics and native COM/lifetime regressions. Synthetic native OLE tests reproduce the shipped failure and verify corrected delayed reads. Real Discord/ChatGPT upload outcomes remain a separate acceptance check. See [RCA](docs/DRAG_DROP_RCA.md).
+
 ## 0.2.8-preview.1 — 2026-10-31
 
 Selected Frame-S throughout the app, with orange-on-dark and dark-on-light header variants. Completed shared light/dark controls, menus, tooltips, annotation selection and scrollbars; added theme-aware tray rendering and Windows 11 title-bar preference. Refined settings sections and inline validation. Corrected primary hover/pressed/focus contrast and live editor theme updates. Serial synthetic suite: 134 passing tests; 36 software-rendered UI fixtures, including a pixel-matched live theme switch. Native desktop checks remain separate.

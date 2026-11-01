@@ -144,18 +144,31 @@ public sealed class DragTransferTests
     public void FileCountBudgetRefusesAnotherDragWithoutDeletingRecentTransfers()
     {
         var store = new DragTransferStore(directory);
-        for (int i = 0; i < 32; i++)
+        using (DragTransferLease lease = store.Prepare(CoreTests.Image(1, 1)))
         {
-            using DragTransferLease lease = store.Prepare(CoreTests.Image(1, 1));
             lease.Complete(true);
+            for (int i = 1; i < 1024; i++)
+                File.Copy(lease.FilePath, Path.Combine(directory, ".leftshot-drag-" + Guid.NewGuid().ToString("N") + ".png"));
         }
         string[] original = Directory.GetFiles(directory);
         Assert.Throws<IOException>(() => store.Prepare(CoreTests.Image(1, 1)));
         Assert.That(Directory.GetFiles(directory), Is.EquivalentTo(original));
         File.SetLastWriteTimeUtc(original[0], DateTime.UtcNow.AddDays(-2));
         using DragTransferLease next = store.Prepare(CoreTests.Image(1, 1));
-        Assert.That(Directory.GetFiles(directory), Has.Length.EqualTo(32));
+        Assert.That(Directory.GetFiles(directory), Has.Length.EqualTo(1024));
         Assert.That(File.Exists(original[0]), Is.False);
+    }
+
+    [Test]
+    public void MoreThanThirtyTwoHealthyHandoffsRemainAvailableWithinByteBudget()
+    {
+        var store = new DragTransferStore(directory);
+        for (int i = 0; i < 33; i++)
+        {
+            using DragTransferLease lease = store.Prepare(CoreTests.Image(1, 1));
+            lease.Complete(true);
+        }
+        Assert.That(Directory.GetFiles(directory), Has.Length.EqualTo(33));
     }
 
     [Test]

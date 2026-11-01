@@ -127,7 +127,7 @@ internal sealed class PreviewWindow : Window
         retention.VerticalAlignment = VerticalAlignment.Center;
         retention.TextWrapping = TextWrapping.NoWrap;
         retention.TextTrimming = TextTrimming.CharacterEllipsis;
-        retention.ToolTip = $"Auto-hides after {seconds} seconds, with up to {seconds*2} additional seconds of hover grace. Holding/dragging pauses it. Accepted drops keep a temporary PNG in data/drag-out for at least 24 hours; cleanup occurs on a later drag.";
+        retention.ToolTip = $"Auto-hides after {seconds} seconds, with up to {seconds*2} additional seconds of hover grace. Holding/dragging pauses it. Accepted drops and data read by another app keep a temporary PNG in data/drag-out for at least 24 hours, even if the drag is then canceled; cleanup occurs on a later drag.";
         footer.Children.Add(retention);
         if(openLocation is not null)
         {

@@ -151,8 +151,18 @@ internal sealed class AppController : IDisposable
     {
         if(!ResourcePolicy.CanAllocate(RetainedBytes(),(long)image.PixelWidth*image.PixelHeight,4))throw new InvalidOperationException("Close another editor or reference before dragging this image.");
         using var transfer=dragTransfers.Prepare(DocumentRenderer.Render(new EditDocument(image)));
-        var effect=DragDrop.DoDragDrop(source,transfer.Data,DragDropEffects.Copy);
-        transfer.Complete((effect&DragDropEffects.Copy)!=0);
+        try
+        {
+            transfer.Trace.Record("native_start",leftButtonDown:Native.GetAsyncKeyState(1)<0);
+            var effect=DragDrop.DoDragDrop(source,transfer.Data,DragDropEffects.Copy);
+            transfer.Trace.Record("native_return", effect:(int)effect);
+            transfer.Complete((effect&DragDropEffects.Copy)!=0);
+        }
+        catch(Exception error)
+        {
+            transfer.Trace.Record("native_failed",error:error);
+            throw;
+        }
     }
 
     private void OpenEditor(Captured shot)

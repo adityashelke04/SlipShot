@@ -1,5 +1,7 @@
 # Drag transfer source review
 
+**Historical review:** the accepted-only lifetime and 32-file policy below were superseded in 0.2.9. Native regression testing found that a target can consume the file path while returning None; deleting that file breaks delayed reads. See the [2026-11-01 RCA](DRAG_DROP_RCA.md) for the fix and current verification evidence.
+
 Review date: 2026-10-30. Scope: `Services/DragTransfer.cs`, `Core/PreviewGesture.cs`, `UI/PreviewWindow.cs`, and the new `AppController` integration. The connected image writer, renderer, preview lifetime, resource policy, shutdown entry point, and test bodies were also read. This was a read-only source audit; the reviewer ran no build, tests, GUI, native drag, clipboard operation, or desktop capture.
 
 **What this change does:** An explicit drag from the preview prepares flattened image data in file, bitmap, and PNG formats. An accepted copy leaves its temporary file available for later reads; a cancelled or interrupted operation attempts to remove its own file. The preview separates click-to-edit from dragging and keeps its lifetime stable while Windows runs the drag operation.

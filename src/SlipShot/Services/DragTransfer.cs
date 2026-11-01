@@ -10,29 +10,36 @@ public sealed class DragTransferStore
 {
     // Preserve ownership recognition for transfer files created before the rename.
     private const string Prefix = ".leftshot-drag-";
-    private const int MaximumFiles = 32;
+    private const int MaximumFiles = 1024;
     private const long MaximumBytes = 256L * 1024 * 1024;
     private static readonly TimeSpan Retention = TimeSpan.FromHours(24);
     private readonly string directory;
+    private readonly DragDiagnostics diagnostics;
     private readonly HashSet<string> active = new(StringComparer.OrdinalIgnoreCase);
 
-    public DragTransferStore(string directory) => this.directory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
+    public DragTransferStore(string directory) : this(directory, DragDiagnostics.FromEnvironment()) { }
+
+    internal DragTransferStore(string directory, DragDiagnostics diagnostics)
+    {
+        this.directory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
+        this.diagnostics = diagnostics;
+    }
 
     // Call only for an explicit drag, with the flattened DocumentRenderer output.
     public DragTransferLease Prepare(BitmapSource flattened)
     {
         ArgumentNullException.ThrowIfNull(flattened);
-        EnsurePlainDirectory();
-        Directory.CreateDirectory(directory);
-        EnsurePlainDirectory();
-        (int count, long bytes) = SweepExpired();
-        if (count >= MaximumFiles || bytes >= MaximumBytes) throw CapacityError();
-
+        DragTrace trace = diagnostics.Begin();
         string path = Path.Combine(directory, Prefix + Guid.NewGuid().ToString("N") + ".png");
         bool created = false;
         MemoryStream? png = null;
         try
         {
+            EnsurePlainDirectory();
+            Directory.CreateDirectory(directory);
+            EnsurePlainDirectory();
+            (int count, long bytes) = SweepExpired();
+            if (count >= MaximumFiles || bytes >= MaximumBytes) throw CapacityError();
             ImageFiles.Save(flattened, path);
             created = true;
             if (new FileInfo(path).Length > MaximumBytes - bytes) throw CapacityError();
@@ -45,10 +52,12 @@ public sealed class DragTransferStore
             data.SetData(DataFormats.Bitmap, bitmap, autoConvert: false);
             data.SetData("PNG", png, autoConvert: false);
             active.Add(path);
-            return new DragTransferLease(data, path, png, Complete);
+            trace.Record("prepared", bytes: png.Length, width: flattened.PixelWidth, height: flattened.PixelHeight);
+            return new DragTransferLease(data, path, png, Complete, trace);
         }
-        catch
+        catch (Exception error)
         {
+            trace.Record("prepare_failed", error: error);
             png?.Dispose();
             if (created) TryDeleteOwned(path);
             throw;
@@ -77,15 +86,15 @@ public sealed class DragTransferStore
         return (count, bytes);
     }
 
-    private void Complete(string path, bool accepted)
+    private void Complete(string path, bool retain)
     {
         active.Remove(path);
-        if (!accepted)
+        if (!retain)
         {
             TryDeleteOwned(path);
             return;
         }
-        // A target may open the file after DoDragDrop returns, including after this app exits.
+        // A target may queue a read and return None, or open the file after this app exits.
         try
         {
             EnsurePlainDirectory();
@@ -122,21 +131,25 @@ public sealed class DragTransferStore
                 throw new IOException("Drag files cannot use a redirected folder. Move the portable app to a regular writable folder.");
     }
 
-    private static IOException CapacityError() => new("Temporary drag files reached the 32-file or 256-MiB limit. Use Copy or Save, or try again after older drag files expire (24 hours).");
+    private static IOException CapacityError() => new("Temporary drag files reached the 1024-file or 256-MiB limit. Use Copy or Save, or try again after older drag files expire (24 hours).");
 }
 
 public sealed class DragTransferLease : IDisposable
 {
     private readonly MemoryStream png;
     private readonly Action<string, bool> complete;
+    private readonly DragPayload payload;
     private bool completed;
 
     public DataObject Data { get; }
     public string FilePath { get; }
+    internal DragTrace Trace { get; }
 
-    internal DragTransferLease(DataObject data, string filePath, MemoryStream png, Action<string, bool> complete)
+    internal DragTransferLease(DataObject data, string filePath, MemoryStream png, Action<string, bool> complete, DragTrace trace)
     {
-        Data = data;
+        Trace = trace;
+        payload = new DragPayload(data, trace);
+        Data = new DataObject(payload);
         FilePath = filePath;
         this.png = png;
         this.complete = complete;
@@ -146,9 +159,11 @@ public sealed class DragTransferLease : IDisposable
     {
         if (completed) return;
         completed = true;
-        complete(FilePath, accepted);
-        // Successful data objects can also serve late PNG requests; this stream owns only managed memory.
-        if (!accepted) png.Dispose();
+        bool retain = accepted || payload.WasRead;
+        complete(FilePath, retain);
+        Trace.Record("completed", accepted: accepted, retained: retain);
+        // Consumption and the final effect are independent; preserve data already handed to a target.
+        if (!retain) png.Dispose();
     }
 
     public void Dispose() => Complete(false);
