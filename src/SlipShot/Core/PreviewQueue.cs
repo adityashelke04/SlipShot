@@ -23,6 +23,7 @@ public sealed class PreviewQueue<T> where T : class
     {
         ArgumentNullException.ThrowIfNull(item);
         if (Current is null) { Current = item; return; }
+        // Keep the visible preview; when the backlog is full, discard its oldest pending item.
         if (pending.Count == 3) pending.Dequeue();
         pending.Enqueue(item);
     }
