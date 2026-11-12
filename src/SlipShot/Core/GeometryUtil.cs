@@ -39,6 +39,7 @@ public static class GeometryUtil
     {
         if (rectangle.IsEmpty || rectangle.Width <= 0 || rectangle.Height <= 0 || !double.IsFinite(rectangle.X) || !double.IsFinite(rectangle.Y)
             || !double.IsFinite(rectangle.Width) || !double.IsFinite(rectangle.Height)) return Rect.Empty;
+        // Round outward before clipping so fractional edges do not omit touched pixels.
         var result = new Rect(new Point(Math.Floor(rectangle.Left), Math.Floor(rectangle.Top)),
             new Point(Math.Ceiling(rectangle.Right), Math.Ceiling(rectangle.Bottom)));
         result.Intersect(limits);
