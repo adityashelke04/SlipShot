@@ -27,6 +27,7 @@ public sealed class CaptureGate
 
     public bool TryComplete(long token)
     {
+        // A stale worker must not clear the busy flag for a newer capture generation.
         if (!active || token != generation) return false;
         active = false;
         return !canceled;
