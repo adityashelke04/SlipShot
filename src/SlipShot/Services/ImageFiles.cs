@@ -90,6 +90,7 @@ public static class ImageFiles
                 encoder.Save(stream);
                 stream.Flush(true);
             }
+            // Verify the temporary export before replacing the destination, preserving it on failure.
             using (var stream = File.OpenRead(temporary))
             {
                 BitmapDecoder decoded = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
