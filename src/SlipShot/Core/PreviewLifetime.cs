@@ -20,6 +20,7 @@ public sealed class PreviewLifetime
     public bool Advance(TimeSpan elapsed, bool interacting, bool protectedInteraction = false)
     {
         if (elapsed < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(elapsed));
+        // Protected work freezes both the idle countdown and the finite hover allowance.
         if (protectedInteraction || IsDismissing) return false;
         // Hover/focus get a finite shared allowance. A parked pointer must not pin the card forever.
         if (interacting)
