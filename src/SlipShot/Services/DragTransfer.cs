@@ -80,6 +80,7 @@ public sealed class DragTransferStore
                 file.Refresh();
             }
             if (!file.Exists) continue;
+            // Count files that survive a failed cleanup against the quota instead of assuming deletion reclaimed their space.
             count++;
             bytes = checked(bytes + file.Length);
         }
