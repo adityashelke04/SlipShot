@@ -62,6 +62,7 @@ public static class ClipboardWriter
             cancellation.ThrowIfCancellationRequested();
             try
             {
+                // Retry delays do not capture the UI context, so marshal each subsequent write back to the original STA.
                 if (dispatcher.CheckAccess()) sink.SetImage(image);
                 else await dispatcher.InvokeAsync(() => { cancellation.ThrowIfCancellationRequested(); sink.SetImage(image); }, DispatcherPriority.Normal, cancellation).Task.ConfigureAwait(false);
                 return;
