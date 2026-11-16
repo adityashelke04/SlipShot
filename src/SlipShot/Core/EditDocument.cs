@@ -111,6 +111,7 @@ public sealed class EditDocument
         if(path is not null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(path);
+            // Reusing an export path replaces its contents, so older snapshots can no longer claim that file as saved.
             savedImages.Invalidate(path);
             savedImages.Files.Remove(State);savedImages.Files.Add(State,new SavedImage(path));
         }
