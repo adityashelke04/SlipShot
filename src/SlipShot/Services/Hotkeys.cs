@@ -21,6 +21,7 @@ internal sealed class Hotkeys : IDisposable
     {
         if (!TryParse(text,out var modifiers,out var key)) return false;
         if (activeId != 0 && modifiers == activeModifiers && key == activeKey) return true;
+        // Acquire the replacement first so a conflicting shortcut leaves the old binding usable.
         int proposed = ++nextId;
         if (!Native.RegisterHotKey(source.Handle,proposed,modifiers|0x4000,key)) return false;
         if (activeId != 0) Native.UnregisterHotKey(source.Handle,activeId);
