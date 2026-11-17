@@ -21,6 +21,7 @@ public static class DocumentRenderer
             Draw(drawing, document.Source, document.State);
             drawing.Pop();
         }
+        // At 96 DPI one drawing unit becomes one output pixel, independent of source DPI or editor zoom.
         var result = new RenderTargetBitmap((int)crop.Width, (int)crop.Height, 96, 96, PixelFormats.Pbgra32);
         result.Render(visual);
         result.Freeze();
