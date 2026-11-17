@@ -120,6 +120,8 @@ public static class GeometryUtil
 
     public static Annotation Resize(Annotation annotation, Rect bounds)
     {
+        // A horizontal or vertical stroke has no extent on one axis; use progress along the
+        // other axis there so resizing can open it into a diagonal instead of collapsing its points.
         Rect old = annotation.Bounds;
         return annotation with
         {
