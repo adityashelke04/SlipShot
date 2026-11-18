@@ -67,6 +67,8 @@ public sealed class EditDocument
         if (crop.IsEmpty || crop.Width < 1 || crop.Height < 1)
             throw new ArgumentException("The crop must contain at least one image pixel.", nameof(state));
         long cost = Validate(state.Annotations);
+        // A read-only list can still wrap mutable caller storage; copy stroke points so later
+        // gesture updates cannot rewrite this snapshot or its undo history.
         Annotation[] annotations = state.Annotations.Select(annotation => annotation with
         {
             Points = annotation.Points is null ? null : Array.AsReadOnly(annotation.Points.ToArray())
