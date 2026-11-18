@@ -36,6 +36,8 @@ internal sealed class SelectionWindow : Window
     }
     private IntPtr Messages(IntPtr hwnd,int msg,IntPtr w,IntPtr l,ref bool handled)
     { if(msg==0x7E || msg==0x2E0) Dispatcher.BeginInvoke(new Action(Close)); return IntPtr.Zero; }
+    // Map through the rendered surface size, not the nominal monitor scale, to keep
+    // selection coordinates aligned with the displayed frame after WPF layout.
     private Point PixelPoint(Point point) => new(Math.Clamp(point.X/Math.Max(1,surface.ActualWidth)*surface.Frame.PixelWidth,0,surface.Frame.PixelWidth),Math.Clamp(point.Y/Math.Max(1,surface.ActualHeight)*surface.Frame.PixelHeight,0,surface.Frame.PixelHeight));
     private void Update() { surface.Selection=GeometryUtil.Normalize(anchor!.Value,endpoint,new Rect(0,0,surface.Frame.PixelWidth,surface.Frame.PixelHeight)); surface.InvalidateVisual(); }
     private void Finish()
