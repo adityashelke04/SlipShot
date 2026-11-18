@@ -28,6 +28,7 @@ internal sealed class DesktopCapture : IDesktopCapture
         int width = monitor.Bounds.Width, height = monitor.Bounds.Height;
         if (width < 1 || height < 1 || (long)width * height > 32_000_000)
             throw new InvalidOperationException("This display exceeds the 32-megapixel capture limit.");
+        // A negative DIB height stores rows top-down, matching the row order BitmapSource expects.
         var info = new BitmapInfo { Size = 40, Width = width, Height = -height, Planes = 1, BitCount = 32 };
         using var screen = new ScreenDc(GetDC(IntPtr.Zero));
         if (screen.IsInvalid) throw new Win32Exception();
