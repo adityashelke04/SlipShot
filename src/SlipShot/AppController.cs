@@ -134,6 +134,7 @@ internal sealed class AppController : IDisposable
         card.Closed+=(_,_)=> {if(!ReferenceEquals(preview,card))return;preview=null;if(!suppressAdvance)queue.Clear();};
         card.Show();
     }
+    // Clear identity before Close so the retired card's Closed handler cannot clear the replacement queue.
     private void RetirePreview()
     {var retired=preview;preview=null;retired?.Close();}
     private void ReopenPreview()
