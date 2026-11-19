@@ -28,6 +28,7 @@ internal static partial class Theme
         {e.TextColor=DrawingColor(e.Item.Enabled?"Ink":"Muted");base.OnRenderItemText(e);}
     }
 
+    // Resolve tokens on each paint rather than caching colors: an existing renderer survives theme changes.
     private sealed class TrayColors : Forms.ProfessionalColorTable
     {
         internal TrayColors(){UseSystemColors=false;}
